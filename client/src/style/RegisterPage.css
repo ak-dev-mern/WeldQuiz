@@ -1,0 +1,91 @@
+.register {
+  width: 100%;
+  height: 100vh;
+  max-height: 800px;
+  overflow-y: hidden;
+  background-color: #ffff;
+}
+
+.register img {
+  width: 1125px;
+  height: 150vh;
+  max-height: 100vh;
+  transform: rotate(180deg);
+  top: 0;
+  left: 0;
+  position: absolute;
+  overflow-y: hidden;
+  object-fit: fill;
+  z-index: 1;
+}
+
+.register-form-container {
+  width: 45%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.register-form-container form {
+  width: 700px !important;
+  height: auto;
+  margin-top: 10px;
+  
+}
+
+.register-card {
+  width: 550px;
+  height: 650px;
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  text-align: center;
+  padding: 25px;
+  z-index: 0;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.register-card h1,
+.register-card p {
+  color: rgb(222, 144, 0) !important;
+}
+
+.register-card .image {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.register-card .image img {
+  width: 40%;
+  height: 40%;
+  margin-top: 150px;
+  margin-left: 150px;
+  transform: rotate(0deg);
+}
+
+.password-popover {
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 5px;
+}
+
+.password-popover ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.password-popover li {
+  font-size: 14px;
+  color: red;
+  margin-bottom: 5px;
+}

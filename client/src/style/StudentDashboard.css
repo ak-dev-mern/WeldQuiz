@@ -1,0 +1,36 @@
+.student-dashboard .card {
+  height: 200px;
+  transition: 0.3s ease-in-out;
+  position: relative;
+  color: orangered;
+}
+.student-dashboard .card:hover {
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px,
+    rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
+.overlay {
+  width: 0;
+  height: 200px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 5px;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.student-dashboard .card:hover .card-body a button {
+  color: orangered !important;
+  font-weight: 500;
+}
+
+.student-dashboard .card .card-body a {
+  color: #fff;
+  font-weight: 800 !important;
+}
+.student-dashboard .card .card-body a button:hover {
+  background-color: orangered;
+  color: #ffff !important;
+}

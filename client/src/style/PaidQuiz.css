@@ -1,0 +1,36 @@
+.category-card:hover {
+  scale: 1.05;
+}
+
+.category-card:hover h5 {
+  color: orangered !important;
+}
+
+.category-card {
+  transition: all 0.3s ease !important;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.category-card:hover {
+  z-index: 10; /* Bring hovered card above others */
+}
+
+.folder-icon-wrapper {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+.folder-icon-wrapper i {
+  position: absolute;
+  transition: all 0.3s ease;
+  color: orangered !important;
+}
+.hidden {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.category-card:hover {
+  transform: translateY(-3px);
+  transition: transform 0.3s ease;
+}

@@ -1,0 +1,26 @@
+.add-question-container {
+  width: 100%;
+  display: grid !important;
+  place-items: center !important;
+}
+.question-tab-link {
+  color: #000 !important;
+  width: 200px;
+}
+.question-tab-link.active {
+  background-color: orangered !important;
+}
+.question-tab-link:hover {
+  color: #fff;
+}
+.question-tab-link.active {
+  color: #ffff !important;
+}
+
+.add-question-container form {
+  width: 500px;
+  height: auto;
+  box-shadow: rgb(233, 232, 232) 0px 4px 16px, rgb(255, 255, 255) 0px 8px 24px,
+    rgba(253, 253, 255, 0.967) 0px 16px 56px;
+  background-color: #ffffff3c !important;
+}

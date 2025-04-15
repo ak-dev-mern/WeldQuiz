@@ -1,0 +1,369 @@
+.discussion-page-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Form Styles */
+.discussion-form {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.discussion-form h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  border-bottom: 1px solid #ecf0f1;
+  padding-bottom: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background-color: #3498db;
+  color: white;
+  border: 1px solid #e74c3c !important;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.submit-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Discussions List */
+.discussions-list {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.discussions-list h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  border-bottom: 1px solid #ecf0f1;
+  padding-bottom: 0.5rem;
+}
+
+/* Discussion Card */
+.discussion-card {
+  border-bottom: 1px solid #acadad;
+  padding: 1.5rem 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* .discussion-card:hover {
+  transform: translateY(-3px);
+} */
+
+.discussion-card:last-child {
+  border-bottom: none;
+}
+
+.discussion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.discussion-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+.discussion-header h4:hover {
+  color: #3498db;
+}
+
+.discussion-meta {
+  display: flex;
+  gap: 1rem;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.discussion-description {
+  color: #34495e;
+  margin: 1rem 0;
+  line-height: 1.5;
+}
+
+/* Messages Section */
+.messages-section {
+  margin-top: 1.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid #ecf0f1;
+}
+
+.messages-section h5 {
+  margin: 0.5rem 0 1rem;
+  color: #2c3e50;
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.message {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  animation: fadeIn 0.3s ease;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.message-header strong {
+  color: #2c3e50;
+}
+
+.message-header span {
+  color: #7f8c8d;
+}
+
+.message-content {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Reply Form */
+.reply-form {
+  margin-top: 1.5rem;
+}
+
+.reply-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+}
+
+.reply-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.character-count {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+}
+
+.reply-form button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reply-form button:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.reply-form button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0 1rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.pagination button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: #7f8c8d;
+}
+
+/* Error and Loading States */
+.error-message {
+  color: #e74c3c;
+  background-color: #fdecea;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  border-left: 4px solid #e74c3c;
+}
+
+.loading,
+.no-discussions,
+.no-messages {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .discussion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .discussion-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.edit-message-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.edit-actions button {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.message-content {
+  cursor: pointer;
+}
+
+.message-actions {
+  margin-top: 10px;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.pagination-controls.bottom {
+  margin-top: 2rem;
+}
+
+.pagination-btn {
+  padding: 0.2rem 1rem;
+  background-color: #4a6fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #3a5a80;
+}
+
+.pagination-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: bold;
+  color: #333;
+}
+
+.discussion-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}

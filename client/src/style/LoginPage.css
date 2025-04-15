@@ -1,0 +1,113 @@
+.login {
+  width: 100%;
+  height: 100vh;
+  max-height: 800px;
+  overflow-y: hidden;
+  background-color: #ffff;
+}
+
+.login img {
+  width: 1000px;
+  height: 150vh;
+  max-height: 100vh;
+  top: 0;
+  right: 0;
+  position: absolute;
+  overflow-y: hidden;
+  object-fit: fill;
+  z-index: 1;
+}
+
+.login-form-container {
+  width: 500px;
+  height: auto;
+  position: absolute;
+  right: 120px;
+  top: 20%;
+  overflow-y: hidden;
+  z-index: 2;
+}
+
+.login-form-container form {
+  width: 500px !important;
+  height: auto;
+}
+
+.login-form-container form input,
+.login-form-container form .input-group {
+  width: 400px;
+}
+.login-card {
+  width: 550px;
+  height: 650px;
+  position: absolute;
+   top: 50px;
+  left: 50px;
+  text-align: center;
+  padding: 25px;
+  z-index: 0;
+  border-radius: 15px;
+}
+
+.login-card h1,
+.login-card p {
+  color: rgb(222, 144, 0) !important;
+}
+
+.login-card .image {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.login-card .image img {
+  width: 40%;
+  height: 40%;
+  margin-top: 150px;
+  margin-right: 170px;
+
+}
+
+#rememberMe{
+  width: 15px;
+  height: 15px;
+}
+
+
+
+/* Password strength meter styles */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strength-meter {
+  display: flex;
+  gap: 2px;
+  width: 100px;
+}
+
+.strength-bar {
+  height: 4px;
+  width: 20%;
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+/* Loading spinner alignment */
+.spinner-border {
+  vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-form-container {
+    padding: 0 15px;
+  }
+  
+  .login-card {
+    padding: 20px;
+  }
+}
+
+

@@ -1,0 +1,22 @@
+footer {
+  background-color: orangered !important ;
+}
+footer div {
+  color: #fff !important;
+}
+footer .social-icon a i {
+  transition: 0.3s ease-in-out;
+}
+footer .social-icon a i {
+  padding: 5px;
+  text-align: center;
+  line-height: 1.3;
+  border-radius: 50%;
+  width: 30px !important;
+  height: 30px !important;
+}
+
+footer .social-icon i:hover {
+  background-color: #ffff;
+  color: orangered !important;
+}

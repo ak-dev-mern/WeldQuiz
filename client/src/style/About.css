@@ -1,0 +1,88 @@
+.about .about-image {
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  border: 20px solid #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.about .about-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.main-name-lable {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: orangered;
+  color: #fff;
+  padding: 10px;
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: width 0.5s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.about .about-image:hover .main-name-lable {
+  width: 460px;
+  opacity: 1;
+}
+
+.about .employee-img {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.about .employee-img div {
+  width: 330px;
+  height: 300px;
+  position: relative;
+}
+
+.about .employee-img div .name-lable {
+  position: absolute;
+  top: 230px;
+  left: 15px;
+  background-color: orangered;
+  width: 0;
+  height: 70px;
+  color: #fff;
+  padding: 10px;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.5s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.about .employee-img div:hover .name-lable {
+  width: 300px;
+  opacity: 1;
+}
+
+.about .employee-img img {
+  border: 10px solid #fff;
+  object-fit: fill;
+}
+
+.social-media-link {
+  position: absolute;
+  top: -45px;
+  left: 140px;
+  width: 100%;
+}
+
+.social-media-link a {
+  color: #fff;
+  transition: color 0.3s ease-in-out;
+}
+
+.social-media-link a i:hover {
+  color: #ccc;
+}

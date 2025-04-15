@@ -1,0 +1,18 @@
+.contact-form-container {
+  position: relative;
+}
+.contact .card {
+  transition: 0.3s ease;
+}
+.contact .card .card-header h3 {
+  color: orangered !important;
+}
+.contact .card:hover {
+  transform: rotate(5deg);
+}
+.contact form textarea {
+  height: 130px;
+  resize: none;
+}
+
+
