@@ -7,6 +7,7 @@ import {
   discussionValidators,
   messageValidators,
 } from "../validators/discussionValidators.js";
+import { Sequelize } from "sequelize";
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ router.post(
 // GET: Fetch all discussions with pagination and messages
 router.get("/getdiscussions", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 100;
   const offset = (page - 1) * limit;
 
   try {
@@ -63,7 +64,8 @@ router.get("/getdiscussions", async (req, res) => {
         {
           model: Message,
           as: "messages",
-          limit: 5, // Only get 5 latest messages per discussion
+          separate: true, // ✅ Ensures limit/order works per discussion
+          limit: 5,
           order: [["createdAt", "DESC"]],
         },
       ],
@@ -260,14 +262,26 @@ router.get("/getmessages/:id/messages", async (req, res) => {
 
 // GET: Fetch all messages (without discussion ID filter)
 router.get("/getmessages", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = (page - 1) * limit;
+
   try {
-    const messages = await Message.findAll({
-      order: [["createdAt", "ASC"]], // Order by creation date
+    const { count, rows: messages } = await Message.findAndCountAll({
+      order: [["createdAt", "ASC"]],
+      limit,
+      offset,
     });
 
     return res.status(200).json({
       success: true,
       messages,
+      pagination: {
+        total: count,
+        pages: Math.ceil(count / limit),
+        currentPage: page,
+        perPage: limit,
+      },
     });
   } catch (error) {
     console.error("Fetch messages error:", error);
@@ -277,6 +291,7 @@ router.get("/getmessages", async (req, res) => {
     });
   }
 });
+
 
 // DELETE: Delete message
 router.delete(
@@ -377,27 +392,34 @@ router.put(
 );
 
 router.get("/mydiscussions", authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 6;
-  const offset = (page - 1) * limit;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const offset = (page - 1) * limit;
 
-  // Make sure the query filters correctly based on `created_by`
-  const { count, rows } = await Discussion.findAndCountAll({
-    where: { created_by: userId },
-    limit,
-    offset,
-    order: [["createdAt", "DESC"]],
-  });
+    // ✅ Count all discussions by the user
+    const total = await Discussion.count({
+      where: { created_by: req.user.id },
+    });
 
-  res.json({
-    discussions: rows,
-    pagination: {
-      total: count,
-      page,
-      pages: Math.ceil(count / limit),
-    },
-  });
+    // ✅ Fetch paginated discussions
+    const discussions = await Discussion.findAll({
+      where: { created_by: req.user.id },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    res.json({
+      discussions,
+      total, // ✅ total discussions by this user
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    });
+  } catch (err) {
+    console.error("Error fetching user's discussions:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // In your discussion routes file
@@ -432,6 +454,19 @@ router.delete("/mydiscussions/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/messages/mymessages - fetch all messages from the logged-in user
+router.get("/mymessages", authMiddleware, async (req, res) => {
+  try {
+    const messages = await Message.findAll({
+      where: { senderId: req.user.id },
+      order: [["createdAt", "DESC"]],
+    });
 
+    res.json({ messages });
+  } catch (err) {
+    console.error("Error fetching user's messages:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

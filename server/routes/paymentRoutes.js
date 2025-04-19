@@ -115,115 +115,189 @@ router.get("/session/:sessionId", async (req, res) => {
 
 const getStripeCustomerId = async (email) => {
   try {
-    // Search for the customer in Stripe by email
     const customers = await stripe.customers.list({
-      email: email,
+      email,
+      limit: 1,
     });
 
-    if (customers.data.length > 0) {
-      return customers.data[0].id; // Return the first match (Stripe might have more than one customer with the same email)
-    } else {
-      throw new Error("Customer not found in Stripe");
+    if (customers.data.length === 0) {
+      console.warn("No Stripe customer found for email:", email);
+      return null;
     }
-  } catch (error) {
-    console.error("Error fetching customer ID from Stripe:", error);
-    throw new Error("Failed to retrieve Stripe customer ID");
+
+    return customers.data[0].id;
+  } catch (err) {
+    console.error("Error fetching Stripe customer:", err.message);
+    return null;
   }
 };
 
 router.get("/subscription-status", authMiddleware, async (req, res) => {
   try {
-    // Step 1: Check if the user email exists
     const userEmail = req.user?.email;
-    console.log(userEmail);
-
     if (!userEmail) {
       return res.status(400).json({ error: "User email not found in token" });
     }
 
-    // Step 2: Get Stripe customer ID
     const stripeCustomerId = await getStripeCustomerId(userEmail);
     if (!stripeCustomerId) {
-      return res.status(400).json({ error: "Stripe customer ID not found" });
+      console.log("No Stripe customer found for:", userEmail);
+      return res.json({ hasSubscription: false, subscriptions: [] });
     }
 
-    // Step 3: Fetch subscription list
+    // Get all subscriptions with price info
     const subscriptions = await stripe.subscriptions.list({
       customer: stripeCustomerId,
       status: "all",
       expand: ["data.items.data.price"],
     });
 
-    if (subscriptions.data.length === 0) {
-      return res.status(404).json({ error: "No subscriptions found" });
-    }
+    // Create a product name cache to avoid redundant fetches
+    const productCache = new Map();
 
-    // Step 4: Format subscription data
-    const subscriptionData = subscriptions.data
-      .map((subscription) => {
-        const startDate = new Date(subscription.start_date * 1000); // Convert to milliseconds
+    // Step 4: Format subscriptions
+    const subscriptionData = await Promise.all(
+      subscriptions.data.map(async (subscription) => {
+        const item = subscription.items?.data[0];
+        const price = item?.price;
+        const productId = price?.product;
 
         let productName = "N/A";
-
-        // Handle missing or zero `end_date`
-        let endDate = null;
-
-        // If there's no end_date, calculate it from the billing_cycle_anchor and plan's interval
-        if (subscription.end_date) {
-          endDate = new Date(subscription.end_date * 1000);
-        } else {
-          // Check the interval (if available) to calculate the end date
-          const interval = subscription.items?.data[0]?.plan?.interval; // e.g., "month", "year"
-          const billingCycleAnchor = subscription.billing_cycle_anchor;
-
-          if (interval && billingCycleAnchor) {
-            const cycleStartDate = new Date(billingCycleAnchor * 1000);
-            endDate = new Date(cycleStartDate);
-
-            // Add one interval to the start date (e.g., for monthly, add 1 month)
-            if (interval === "month") {
-              endDate.setMonth(endDate.getMonth() + 1);
-            } else if (interval === "year") {
-              endDate.setFullYear(endDate.getFullYear() + 1);
-            } else {
-              // Default case if the interval is not "month" or "year"
-              endDate = null; // Set to null if no interval is found
+        if (productId) {
+          if (productCache.has(productId)) {
+            productName = productCache.get(productId);
+          } else {
+            try {
+              const product = await stripe.products.retrieve(productId);
+              productName = product.name;
+              productCache.set(productId, productName);
+            } catch (err) {
+              console.error(
+                "⚠️ Failed to retrieve product:",
+                productId,
+                err.message
+              );
             }
           }
         }
 
-        // Check if startDate or endDate are invalid
+        const startDate = new Date(subscription.start_date * 1000);
+        let endDate = null;
+        const interval = price?.recurring?.interval;
+        const billingCycleAnchor = subscription.billing_cycle_anchor;
+
+        if (subscription.ended_at) {
+          endDate = new Date(subscription.ended_at * 1000);
+        } else if (interval && billingCycleAnchor) {
+          endDate = new Date(billingCycleAnchor * 1000);
+          if (interval === "month") {
+            endDate.setMonth(endDate.getMonth() + 1);
+          } else if (interval === "year") {
+            endDate.setFullYear(endDate.getFullYear() + 1);
+          }
+        }
+
         if (
           isNaN(startDate.getTime()) ||
           (endDate && isNaN(endDate.getTime()))
         ) {
           console.error("Invalid date values", {
             start_date: subscription.start_date,
-            end_date: subscription.end_date,
+            end_date: subscription.ended_at,
           });
-          return null; // Skip this subscription if dates are invalid
+          return null;
         }
 
         return {
           id: subscription.id,
           status: subscription.status,
           plan: productName,
+          amount: (price?.unit_amount || 0) / 100,
+          currency: price?.currency || "N/A",
           startDate: startDate.toISOString(),
-          endDate: endDate ? endDate.toISOString() : null, // If endDate is available, include it
+          endDate: endDate ? endDate.toISOString() : null,
         };
       })
-      .filter(Boolean); // Remove any invalid subscriptions from the array
+    );
 
-    // Return subscription data
     res.json({
-      hasSubscription: subscriptionData.length > 0,
-      subscriptions: subscriptionData, // Return all subscriptions
+      hasSubscription: subscriptionData.filter(Boolean).length > 0,
+      subscriptions: subscriptionData.filter(Boolean),
     });
   } catch (error) {
     console.error("🔥 Error retrieving subscription data:", error.message);
     res.status(500).json({
       error: "Failed to fetch subscription data",
       details: error.message,
+    });
+  }
+});
+
+
+router.get("/all-customers", async (req, res) => {
+  try {
+    let allCustomers = [];
+    let hasMore = true;
+    let startingAfter = null;
+
+    while (hasMore) {
+      // Build params object
+      const params = { limit: 100 };
+      if (startingAfter) {
+        params.starting_after = startingAfter;
+      }
+
+      const customers = await stripe.customers.list(params);
+
+      allCustomers.push(...customers.data);
+
+      hasMore = customers.has_more;
+      if (hasMore) {
+        startingAfter = customers.data[customers.data.length - 1].id;
+      }
+    }
+
+    res.json({
+      count: allCustomers.length,
+      customers: allCustomers.map((cust) => ({
+        id: cust.id,
+        email: cust.email,
+        name: cust.name,
+        created: new Date(cust.created * 1000).toISOString(),
+      })),
+    });
+  } catch (error) {
+    console.error("🔥 Error retrieving Stripe customers:", error.message);
+    res.status(500).json({
+      error: "Failed to fetch customers",
+      details: error.message,
+    });
+  }
+});
+
+// Get total revenue
+router.get("/total-revenue", async (req, res) => {
+  try {
+    const payments = await stripe.paymentIntents.list({
+      limit: 100,
+    });
+
+    let total = 0;
+    for (const payment of payments.data) {
+      if (payment.status === "succeeded") {
+        total += payment.amount_received;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      totalRevenue: total / 100, // Stripe uses cents, convert to dollars
+    });
+  } catch (error) {
+    console.error("Stripe revenue fetch error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch revenue",
     });
   }
 });

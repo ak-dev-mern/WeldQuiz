@@ -86,22 +86,64 @@ const RegisterPage = () => {
     e.preventDefault();
     setError("");
 
-    // Validate password
-    const passwordError = validatePassword(formData.password);
-    if (passwordError) {
-      setError(passwordError);
-      return;
+    const errors = {};
+
+    if (!formData.username) {
+      errors.username = "Username is required.";
     }
 
-    // Validate password match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+    if (!formData.password) {
+      errors.password = "Password is required.";
+    } else {
+      const passwordError = validatePassword(formData.password);
+      if (passwordError) {
+        errors.password = passwordError;
+      }
     }
 
-    // Validate terms acceptance
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password.";
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (!formData.fullName) {
+      errors.fullName = "Full name is required.";
+    }
+
+    if (!formData.age) {
+      errors.age = "Age is required.";
+    }
+
+    if (!formData.email) {
+      errors.email = "Email is required.";
+    }
+
+    if (!formData.phone) {
+      errors.phone = "Phone number is required.";
+    }
+
+    if (!formData.country) {
+      errors.country = "Country is required.";
+    }
+
+    if (!formData.city) {
+      errors.city = "City is required.";
+    }
+
+    if (!formData.address) {
+      errors.address = "Address is required.";
+    }
+
     if (!formData.termsAccepted) {
-      setError("You must accept the terms and conditions.");
+      errors.termsAccepted =
+        "You read and must accept the terms and conditions.";
+    }
+
+    // If there are any errors, set the first one
+    if (Object.keys(errors).length > 0) {
+      const firstErrorKey = Object.keys(errors)[0];
+      setError(errors[firstErrorKey]); // Or show all errors if needed
       return;
     }
 
@@ -116,6 +158,7 @@ const RegisterPage = () => {
       country: formData.country,
       city: formData.city,
       address: formData.address,
+      termsAccepted: formData.termsAccepted,
       role: "student", // Default role for new users
     };
 
@@ -156,7 +199,6 @@ const RegisterPage = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div
@@ -172,7 +214,6 @@ const RegisterPage = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    required
                   />
                   <span
                     className="input-group-text"
@@ -207,7 +248,6 @@ const RegisterPage = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    required
                   />
                   <span
                     className="input-group-text"
@@ -230,7 +270,6 @@ const RegisterPage = () => {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className="form-group my-3">
@@ -241,7 +280,6 @@ const RegisterPage = () => {
                   name="age"
                   value={formData.age}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
@@ -256,7 +294,6 @@ const RegisterPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className="form-group my-3">
@@ -267,7 +304,6 @@ const RegisterPage = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className="form-group my-3">
@@ -278,7 +314,6 @@ const RegisterPage = () => {
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className="form-group my-3">
@@ -289,7 +324,6 @@ const RegisterPage = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  required
                 />
               </div>
               <div className="form-group my-3">
@@ -300,7 +334,6 @@ const RegisterPage = () => {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
@@ -314,10 +347,12 @@ const RegisterPage = () => {
               name="termsAccepted"
               checked={formData.termsAccepted}
               onChange={handleChange}
-              required
             />
             <label className="form-check-label" htmlFor="terms">
-              I accept the terms and conditions
+              I accept the{" "}
+              <Link className="link-dark" to="/legal/terms&conditions">
+                terms and conditions
+              </Link>
             </label>
           </div>
 
@@ -330,7 +365,7 @@ const RegisterPage = () => {
               {registerMutation.isLoading ? "Registering..." : "Register"}
             </button>
           </div>
-          <p className="fw-bold my-5 text-center">
+          <p className="fw-bold my-4 text-center">
             If you have account please{" "}
             <Link to="/login" className="link-danger">
               Login

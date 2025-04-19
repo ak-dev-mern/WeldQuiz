@@ -13,7 +13,7 @@ const MyDiscussion = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["discussions", page, limit],
+    queryKey: ["mydiscussions", page, limit],
     queryFn: async () => {
       const res = await axios.get(
         `${API_URL}/api/discussions/mydiscussions?page=${page}&limit=${limit}`,
@@ -38,7 +38,7 @@ const MyDiscussion = () => {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["discussions"]);
+      queryClient.invalidateQueries(["mydiscussions"]);
     },
   });
 
@@ -47,7 +47,7 @@ const MyDiscussion = () => {
   };
 
   const handleNext = () => {
-    if (data?.pagination?.pages && page < data.pagination.pages) {
+    if (data?.totalPages && page < data.totalPages) {
       setPage((prev) => prev + 1);
     }
   };
@@ -148,25 +148,22 @@ const MyDiscussion = () => {
                   ⬅️ Prev
                 </button>
 
-                {Array.from(
-                  { length: data?.pagination?.pages || 0 },
-                  (_, i) => (
-                    <button
-                      key={i}
-                      className={`btn ${
-                        page === i + 1 ? "btn-dark" : "btn-outline-dark"
-                      }`}
-                      onClick={() => setPage(i + 1)}
-                    >
-                      {i + 1}
-                    </button>
-                  )
-                )}
+                {Array.from({ length: data.totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    className={`btn ${
+                      page === i + 1 ? "btn-dark" : "btn-outline-dark"
+                    }`}
+                    onClick={() => setPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
 
                 <button
                   onClick={handleNext}
                   className="btn btn-light border d-flex align-items-center"
-                  disabled={page === data?.pagination?.pages}
+                  disabled={page === data.totalPages}
                 >
                   Next ➡️
                 </button>

@@ -87,8 +87,8 @@ const MessagesTable = () => {
                   <td>{message.sendername}</td>
                   <td>{message.discussionId}</td>
                   <td>{message.text}</td>
-                  <td>{new Date(message.createdAt).toLocaleDateString()}</td>
-                  <td>{new Date(message.updatedAt).toLocaleDateString()}</td>
+                  <td>{new Date(message.createdAt).toLocaleString()}</td>
+                  <td>{new Date(message.updatedAt).toLocaleString()}</td>
                 </tr>
               ))
             ) : (

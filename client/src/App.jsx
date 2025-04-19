@@ -30,15 +30,7 @@ import PaymentSuccess from "./pages/student/PaymentSuccess";
 import PaymentCancelled from "./pages/student/PaymentCancelled";
 import DiscussionDetail from "./pages/public/DiscussionDetail";
 import PaidQuizDetails from "./pages/student/PaidQuizDetails";
-
-// ProtectedRoute component to handle route protection
-const ProtectedRoute = ({ children }) => {
-  const student = useSelector((state) => state.student.student);
-  if (!student) {
-    return <Navigate to="/login" />;
-  }
-  return children;
-};
+import PaidQuizLessons from "./pages/student/PaidQuizLessons";
 
 // Auth check utility function
 const checkAuth = () => {
@@ -91,9 +83,10 @@ function AppContent() {
               <Route path="payment-cancelled" element={<PaymentCancelled />} />
               <Route path="payment-receipt" element={<PaymentReceipt />} />
               <Route
-                path="paid-quiz/category/:category"
+                path="paid-quiz/:category/:lesson"
                 element={<PaidQuizDetails />}
               />
+              <Route path="paid-quiz/:category" element={<PaidQuizLessons />} />
             </Routes>
           </PrivateRoute>
         }

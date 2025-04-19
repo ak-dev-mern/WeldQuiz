@@ -13,7 +13,7 @@ const PaidQuiz = () => {
   const navigate = useNavigate();
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  // ✅ Fetch subscription status
+  // Fetch subscription status
   const {
     data: subscriptionStatus,
     isLoading: isSubLoading,
@@ -40,9 +40,9 @@ const PaidQuiz = () => {
 
   const isSubscribed = !!activeSubscription;
 
-  // ✅ Fetch questions only if subscription is active
+  // Fetch questions only if subscription is active
   const {
-    data: questions,
+    data: questionsData,
     isLoading: isQuestionsLoading,
     isError: isQuestionsError,
     error: questionsError,
@@ -59,11 +59,8 @@ const PaidQuiz = () => {
 
   const isLoading = isSubLoading || (isSubscribed && isQuestionsLoading);
 
-  const sortedCategories = Array.isArray(questions)
-    ? [...new Set(questions.map((q) => q.category))].sort((a, b) =>
-        a.localeCompare(b)
-      )
-    : [];
+  // Extract unique categories from the nested structure
+  const categories = questionsData?.map((category) => category.category) || [];
 
   if (isLoading) {
     return (
@@ -74,7 +71,6 @@ const PaidQuiz = () => {
     );
   }
 
-  // ✅ Show fallback if subscription is not active or has errors
   if (!isSubscribed || isSubError) {
     const fallbackReason = subscriptionStatus?.status
       ? `Your subscription is currently "${subscriptionStatus.status}".`
@@ -122,13 +118,11 @@ const PaidQuiz = () => {
     <div className="container mt-4">
       <h2 className="mb-4 text-center text-light">Choose a Category</h2>
       <div className="row">
-        {sortedCategories.length > 0 ? (
-          sortedCategories.map((category, index) => (
+        {categories.length > 0 ? (
+          categories.map((category, index) => (
             <div className="col-md-4 col-sm-6 mb-4" key={index}>
               <Link
-                to={`/student/paid-quiz/category/${encodeURIComponent(
-                  category
-                )}`}
+                to={`/student/paid-quiz/${encodeURIComponent(category)}`}
                 className="text-decoration-none"
               >
                 <div

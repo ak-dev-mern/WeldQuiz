@@ -1,8 +1,3 @@
-.add-question-container {
-  width: 100%;
-  display: grid !important;
-  place-items: center !important;
-}
 .question-tab-link {
   color: #000 !important;
   width: 200px;
@@ -17,10 +12,14 @@
   color: #ffff !important;
 }
 
-.add-question-container form {
-  width: 500px;
+.add-question-form {
+  width: 650px;
   height: auto;
-  box-shadow: rgb(233, 232, 232) 0px 4px 16px, rgb(255, 255, 255) 0px 8px 24px,
-    rgba(253, 253, 255, 0.967) 0px 16px 56px;
   background-color: #ffffff3c !important;
+  margin: 0 auto;
+}
+
+.upload-method {
+  width: 200px;
+  margin: 0 auto;
 }

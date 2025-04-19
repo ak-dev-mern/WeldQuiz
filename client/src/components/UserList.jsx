@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "../auth/auth";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style/App.css";
 import React from "react";
 import { format } from "date-fns";
+import { Modal } from "react-bootstrap"; // Import Modal from react-bootstrap
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -54,24 +55,39 @@ const UsersList = () => {
     address: "",
   });
 
+  // Debounce state to delay the filter action
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  // Set debounce delay time (500ms)
+  const debounceDelay = 500;
+
+  useEffect(() => {
+    // Set a timer to update the debounced filters
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, debounceDelay);
+
+    // Cleanup function to clear the timer if the user is still typing
+    return () => clearTimeout(timer);
+  }, [filters]);
+
   const {
-    data: users = [], // Default to an empty array if data is undefined
+    data: users = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["users", filters],
+    queryKey: ["users", debouncedFilters],
     queryFn: async () => {
       const response = await axios.get(`${API_URL}/api/users/getusers`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: filters, // Pass filters to API
+        params: debouncedFilters, // Use debounced filters for API request
       });
       return response.data;
     },
-    enabled: true, // Ensures auto-fetching when component mounts
-    staleTime: 1000,
-    refetchOnWindowFocus: true, // Auto-refetch when the tab is focused
-    refetchOnReconnect: true, // Auto-refetch when internet reconnects
     enabled: !!token,
+    staleTime: 1000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     onError: (error) => {
       console.error("Error fetching users:", error);
     },
@@ -84,7 +100,6 @@ const UsersList = () => {
       });
     },
     onSuccess: () => {
-      // Invalidate users list to trigger a refetch and ensure data is up to date
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error) => {
@@ -94,12 +109,11 @@ const UsersList = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedUser) => {
-      // Exclude password from the updated data
       const { password, ...dataWithoutPassword } = updatedUser;
 
       return await axios.put(
         `${API_URL}/api/users/updateuser/${updatedUser.id}`,
-        dataWithoutPassword, // Send data without password
+        dataWithoutPassword,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -108,6 +122,7 @@ const UsersList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setEditingUserId(null);
+      setEditedUser(null); // Reset the edited user after saving
     },
     onError: (error) => {
       alert(error.response?.data?.message || "Failed to update user.");
@@ -144,7 +159,6 @@ const UsersList = () => {
     }
   };
 
-  // Handle filter change
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({
@@ -177,6 +191,7 @@ const UsersList = () => {
 
           {/* Filter row */}
           <div className="mb-3 d-flex justify-content-center align-items-center gap-3 flex-wrap">
+            {/* Filter inputs */}
             <div>
               <input
                 type="text"
@@ -218,6 +233,7 @@ const UsersList = () => {
               />
             </div>
             <div>
+              {" "}
               <input
                 type="text"
                 className="form-control"
@@ -228,6 +244,7 @@ const UsersList = () => {
               />
             </div>
             <div>
+              {" "}
               <input
                 type="text"
                 className="form-control"
@@ -235,6 +252,17 @@ const UsersList = () => {
                 value={filters.country}
                 onChange={handleFilterChange}
                 placeholder="Filter by Country"
+              />
+            </div>
+            <div>
+              {" "}
+              <input
+                type="text"
+                className="form-control"
+                name="address"
+                value={filters.address}
+                onChange={handleFilterChange}
+                placeholder="Filter by Address"
               />
             </div>
           </div>
@@ -259,182 +287,162 @@ const UsersList = () => {
                 </tr>
               </thead>
               <tbody>
-                {!users || users.length === 0 ? (
-                  <div className="text-light mt-3">User not found</div>
-                ) : null}
-
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan="13">No users found</td>
+                  </tr>
+                )}
                 {users.map((user, index) => (
-                  <tr
-                    key={user.id || user._id}
-                    className={
-                      editingUserId === user.id || editingUserId === user._id
-                        ? "table-danger"
-                        : ""
-                    }
-                  >
+                  <tr key={user.id || user._id}>
                     <td>{index + 1}</td>
-                    {editingUserId === user.id || editingUserId === user._id ? (
-                      <>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="username"
-                            value={editedUser?.id || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="username"
-                            value={editedUser?.username || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="fullName"
-                            value={editedUser?.fullName || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className="form-control"
-                            name="age"
-                            value={editedUser?.age || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={editedUser?.email || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="tel"
-                            className="form-control"
-                            name="phone"
-                            value={editedUser?.phone || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="city"
-                            value={editedUser?.city || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="country"
-                            value={editedUser?.country || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="address"
-                            value={editedUser?.address || ""}
-                            onChange={handleInputChange}
-                          />
-                        </td>
-                        <td>
-                          {format(
-                            new Date(user.createdAt),
-                            "dd-MMM-yyyy HH:mm:SS"
-                          )}
-                        </td>
-                        <td>
-                          {format(
-                            new Date(user.updatedAt),
-                            "dd-MMM-yyyy HH:mm:ss"
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-success btn-sm w-100 w-md-auto px-2 py-0"
-                            onClick={handleSaveEdit}
-                          >
-                            Save
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-secondary btn-sm w-100 w-md-auto px-2 py-0"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td>{user.id}</td>
-                        <td>{user.username}</td>
-                        <td>{user.fullName}</td>
-                        <td>{user.age}</td>
-                        <td>{user.email}</td>
-                        <td>{user.phone}</td>
-                        <td>{user.city}</td>
-                        <td>{user.country}</td>
-                        <td>{user.address}</td>
-                        <td>
-                          {format(
-                            new Date(user.createdAt),
-                            "dd-MMM-yyyy HH:mm:ss"
-                          )}
-                        </td>
-                        <td>
-                          {format(
-                            new Date(user.updatedAt),
-                            "dd-MMM-yyyy HH:mm:ss"
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-warning btn-sm px-2 py-0"
-                            onClick={() => handleEdit(user)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-danger btn-sm px-2 py-0"
-                            onClick={() => handleDelete(user.id || user._id)}
-                            disabled={deleteMutation.isLoading}
-                          >
-                            {deleteMutation.isLoading
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
-                        </td>
-                      </>
-                    )}
+                    <td>{user.username}</td>
+                    <td>{user.fullName}</td>
+                    <td>{user.age}</td>
+                    <td>{user.email}</td>
+                    <td>{user.phone}</td>
+                    <td>{user.city}</td>
+                    <td>{user.country}</td>
+                    <td>{user.address}</td>
+                    <td>
+                      {format(new Date(user.createdAt), "yyyy-MM-dd HH:mm")}
+                    </td>
+                    <td>
+                      {format(new Date(user.updatedAt), "yyyy-MM-dd HH:mm")}
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-warning btn-sm px-2 py-0"
+                        onClick={() => handleEdit(user)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-danger btn-sm py-0 px-2"
+                        onClick={() => handleDelete(user.id || user._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Edit User Modal */}
+        <Modal show={editingUserId !== null} onHide={handleCancelEdit} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit User</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {editedUser && (
+              <form>
+                <div className="row">
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Username</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="username"
+                      value={editedUser.username || ""}
+                      onChange={handleInputChange}
+                      disabled
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={editedUser.email || ""}
+                      onChange={handleInputChange}
+                      disabled
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="fullName"
+                      value={editedUser.fullName || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Age</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="age"
+                      value={editedUser.age || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      name="phone"
+                      value={editedUser.phone || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">City</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="city"
+                      value={editedUser.city || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Country</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="country"
+                      value={editedUser.country || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="mb-3 col-md-6">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="address"
+                      value={editedUser.address || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </form>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <button
+              className="btn btn-secondary btn-default "
+              onClick={handleCancelEdit}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary btn-default"
+              onClick={handleSaveEdit}
+            >
+              Save Changes
+            </button>
+          </Modal.Footer>
+        </Modal>
       </ErrorBoundary>
     </>
   );

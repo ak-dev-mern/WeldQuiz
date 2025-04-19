@@ -25,8 +25,8 @@
   margin-bottom: 1rem;
 }
 
-.form-group input,
-.form-group textarea {
+.discussion-page-container .form-group input,
+.discussion-page-container .form-group textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;

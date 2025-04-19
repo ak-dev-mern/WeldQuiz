@@ -46,14 +46,15 @@ const renderStars = (rating) => {
 
 const MyFeedback = () => {
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15); // 👈 New limit state
+  const [limit, setLimit] = useState(15);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["myFeedbacks", page, limit],
-    queryFn: () => fetchMyFeedbacks({ page, limit }),
-    keepPreviousData: true,
-  });
+const { data, isLoading, isError, error } = useQuery({
+  queryKey: ["myFeedbacks", page, limit],
+  queryFn: () => fetchMyFeedbacks({ page, limit }), // ✅ passes page/limit
+  keepPreviousData: true,
+});
+
 
   const mutation = useMutation({
     mutationFn: deleteFeedback,
@@ -94,8 +95,7 @@ const MyFeedback = () => {
       </div>
     );
 
-  const { feedbacks, total } = data;
-  const totalPages = Math.ceil(total / limit); // 👈 Updated to use limit
+  const { feedbacks, totalPages, currentPage } = data;
 
   return (
     <div className="container mt-5">
@@ -109,7 +109,7 @@ const MyFeedback = () => {
           value={limit}
           onChange={(e) => {
             setLimit(Number(e.target.value));
-            setPage(1); // Reset to first page on limit change
+            setPage(1);
           }}
         >
           <option value={3}>3</option>
@@ -158,7 +158,7 @@ const MyFeedback = () => {
         <div className="custom-pagination d-flex gap-2">
           <button
             className="btn btn-light border"
-            disabled={page === 1}
+            disabled={currentPage === 1}
             onClick={() => setPage((p) => p - 1)}
           >
             ⬅️ Prev
@@ -168,7 +168,7 @@ const MyFeedback = () => {
             <button
               key={i}
               className={`btn ${
-                page === i + 1 ? "btn-dark" : "btn-outline-dark"
+                currentPage === i + 1 ? "btn-dark" : "btn-outline-dark"
               }`}
               onClick={() => setPage(i + 1)}
             >
@@ -178,7 +178,7 @@ const MyFeedback = () => {
 
           <button
             className="btn btn-light border"
-            disabled={page === totalPages}
+            disabled={currentPage === totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
             Next ➡️

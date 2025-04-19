@@ -1,24 +1,27 @@
 import React, { useState } from "react";
 import "../style/Questions.css";
-import Questions from "./Questions.jsx"; // Import the Questions component
+import Questions from "./Questions.jsx";
 import { getToken } from "../auth/auth.js";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import { useAppContext } from "../context/AppContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const token = getToken();
+
 const AddQuestions = () => {
   const [formData, setFormData] = useState({
-    category: "", // Add category field
+    category: "",
+    lesson: "",
     question: "",
     options: ["", "", "", ""],
-    answer: "", // Store the value of the answer
+    answer: "",
     image: null,
-    excelFile: null, // State for the Excel file
+    excelFile: null,
   });
 
   const [errors, setErrors] = useState({});
-  const [uploadMethod, setUploadMethod] = useState("manual"); // State to track whether user is adding questions manually or via Excel
+  const [uploadMethod, setUploadMethod] = useState("manual");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,7 +40,6 @@ const AddQuestions = () => {
       return;
     }
     if (file && file.size > 5 * 1024 * 1024) {
-      // Limit to 5MB
       alert("File size exceeds 5MB.");
       return;
     }
@@ -59,26 +61,21 @@ const AddQuestions = () => {
   };
 
   const validateForm = () => {
-    let newErrors = {};
-
+    const newErrors = {};
     if (uploadMethod === "manual") {
-      // Validate the manual form fields only
       if (!formData.category) newErrors.category = "Category is required.";
+      if (!formData.lesson) newErrors.lesson = "Lesson is required.";
       if (!formData.question.trim())
         newErrors.question = "Question is required.";
-      formData.options.forEach((option, index) => {
-        if (!option.trim())
-          newErrors[`option${index}`] = `Option ${index + 1} is required.`;
+      formData.options.forEach((opt, i) => {
+        if (!opt.trim())
+          newErrors[`option${i}`] = `Option ${i + 1} is required.`;
       });
       if (!formData.answer)
         newErrors.answer = "Please select the correct answer.";
     } else if (uploadMethod === "excel") {
-      // For Excel, validate the Excel file only
-      if (!formData.excelFile) {
-        newErrors.excelFile = "Excel file is required.";
-      }
+      if (!formData.excelFile) newErrors.excelFile = "Excel file is required.";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -87,20 +84,19 @@ const AddQuestions = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setIsSubmitting(true);
+
     const formDataToSend = new FormData();
-
     if (uploadMethod === "manual") {
-      // For manual, append manual form fields
       formDataToSend.append("category", formData.category);
+      formDataToSend.append("lesson", formData.lesson);
       formDataToSend.append("question", formData.question);
-      formData.options.forEach((option, index) => {
-        formDataToSend.append(`option${index + 1}`, option);
-      });
+      formData.options.forEach((opt, i) =>
+        formDataToSend.append(`option${i + 1}`, opt)
+      );
       formDataToSend.append("answer", formData.answer);
-
       if (formData.image) formDataToSend.append("image", formData.image);
     } else if (uploadMethod === "excel") {
-      // For excel, append the excel file
       formDataToSend.append("excelFile", formData.excelFile);
     }
 
@@ -120,6 +116,7 @@ const AddQuestions = () => {
         alert("Question added successfully!");
         setFormData({
           category: "",
+          lesson: "",
           question: "",
           options: ["", "", "", ""],
           answer: "",
@@ -128,51 +125,39 @@ const AddQuestions = () => {
         });
         setErrors({});
       } else {
-        alert("Failed to add question");
+        alert("Failed to add question.");
       }
-    } catch (error) {
-      alert("An error occurred while adding the question.");
+    } catch (err) {
+      alert("Error while adding the question.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const { triggerFunction } = useAppContext();
-
-  const handleButtonClick = () => {
-    triggerFunction(); // Enable the function in the context
-  };
+  const handleButtonClick = () => triggerFunction();
 
   return (
     <>
-      {/* Nav Tabs */}
-      <ul
-        className="nav nav-tabs  d-flex justify-content-center align-items-center border-0"
-        id="myTab"
-        role="tablist"
-      >
-        <li className="nav-item" role="presentation">
+      <ul className="nav nav-tabs justify-content-center border-0">
+        <li className="nav-item">
           <button
-            className="nav-link active  question-tab-link"
-            id="tab1-tab"
+            className="nav-link active text-light question-tab-link"
             data-bs-toggle="tab"
             data-bs-target="#tab1"
             type="button"
             role="tab"
-            aria-controls="tab1"
-            aria-selected="true"
           >
-            Add New Questions
+            Add New Question
           </button>
         </li>
-        <li className="nav-item" role="presentation">
+        <li className="nav-item">
           <button
-            className="nav-link  question-tab-link"
-            id="tab2-tab"
+            className="nav-link question-tab-link"
             data-bs-toggle="tab"
             data-bs-target="#tab2"
             type="button"
             role="tab"
-            aria-controls="tab2"
-            aria-selected="false"
             onClick={handleButtonClick}
           >
             Questions List
@@ -180,19 +165,15 @@ const AddQuestions = () => {
         </li>
       </ul>
 
-      {/* Tab Content */}
-      <div className="tab-content mt-3 mt-4" id="myTabContent">
-        <div
-          className="tab-pane fade show active"
-          id="tab1"
-          role="tabpanel"
-          aria-labelledby="tab1-tab"
-        >
-          <div className="add-question-container">
-            <h3 className="text-center mb-4">Add Question</h3>
-            {/* Toggle between manual and Excel upload */}
-            <div className="mb-4">
-              <label className="form-label">Choose Upload Method</label>
+      <div className="tab-content mt-2 rounded ">
+        <div className="tab-pane fade  show active" id="tab1" role="tabpanel">
+          <div className=" p-4 rounded shadow-sm">
+            <h1 className="text-center mb-2 text-light fw-bold">
+              Add Question
+            </h1>
+
+            <div className="mb-4 upload-method text-center">
+              <label className="form-label ">Choose Upload Method</label>
               <select
                 className="form-select"
                 value={uploadMethod}
@@ -205,120 +186,104 @@ const AddQuestions = () => {
 
             <form
               onSubmit={handleSubmit}
-              className="border p-4 shadow-sm bg-transparent rounded rounded-4"
+              className=" p-4 shadow-sm rounded rounded-4 add-question-form"
             >
               {uploadMethod === "manual" && (
                 <>
-                  {/* Manual Question Entry */}
-                  <div className="row">
-                    {/* Category Input */}
-                    <div className="col-md-12 mb-2">
-                      <label className="form-label" htmlFor="category">
-                        Category
-                      </label>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Category</label>
                       <select
                         className="form-select"
-                        id="category"
                         name="category"
                         value={formData.category}
                         onChange={handleChange}
                         required
                       >
                         <option value="">Select Category</option>
-                        <option value="PT General Paper">
-                          PT General Paper
-                        </option>
-                        <option value="RT General Paper">
-                          RT General Paper
-                        </option>
-                        <option value="MT General Paper">
-                          MT General Paper
-                        </option>
-                        <option value="UT General Paper">
-                          UT General Paper
-                        </option>
-                        <option value="PT Specific Paper">
-                          PT Specific Paper
-                        </option>
-                        <option value="RT Specific Paper">
-                          RT Specific Paper
-                        </option>
-                        <option value="MT Specific Paper">
-                          MT Specific Paper
-                        </option>
-                        <option value="UT Specific Paper">
-                          UT Specific Paper
-                        </option>
+                        <option>PT General Paper</option>
+                        <option>RT General Paper</option>
+                        <option>MT General Paper</option>
+                        <option>UT General Paper</option>
+                        <option>PT Specific Paper</option>
+                        <option>RT Specific Paper</option>
+                        <option>MT Specific Paper</option>
+                        <option>UT Specific Paper</option>
                       </select>
                       {errors.category && (
                         <small className="text-danger">{errors.category}</small>
                       )}
                     </div>
-                    {/* Question Input */}
-                    <div className="col-md-12 mb-2">
-                      <label className="form-label" htmlFor="question">
-                        Question
-                      </label>
+
+                    <div className="col-md-6">
+                      <label className="form-label">Lesson</label>
                       <input
                         type="text"
-                        className="form-control"
-                        id="question"
-                        name="question"
-                        value={formData.question}
+                        name="lesson"
+                        value={formData.lesson}
                         onChange={handleChange}
+                        className="form-control"
+                        placeholder="Enter lesson name"
                         required
-                        placeholder="Enter your question"
                       />
-                      {errors.question && (
-                        <small className="text-danger">{errors.question}</small>
+                      {errors.lesson && (
+                        <small className="text-danger">{errors.lesson}</small>
                       )}
                     </div>
-                    {/* Options Input */}
-                    {formData.options.map((option, index) => (
-                      <div className="col-md-6 mb-2" key={index}>
-                        <label
-                          className="form-label"
-                          htmlFor={`option${index}`}
-                        >
-                          Option {index + 1}
-                        </label>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Question</label>
+                    <input
+                      type="text"
+                      name="question"
+                      value={formData.question}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="Enter the question"
+                      required
+                    />
+                    {errors.question && (
+                      <small className="text-danger">{errors.question}</small>
+                    )}
+                  </div>
+
+                  <div className="row g-3 mb-3">
+                    {formData.options.map((opt, i) => (
+                      <div key={i} className="col-md-6">
+                        <label className="form-label">Option {i + 1}</label>
                         <input
                           type="text"
                           className="form-control"
-                          id={`option${index}`}
-                          value={option}
+                          value={opt}
                           onChange={(e) =>
-                            handleOptionChange(index, e.target.value)
+                            handleOptionChange(i, e.target.value)
                           }
                           required
-                          placeholder={`Enter option ${index + 1}`}
                         />
-                        {errors[`option${index}`] && (
+                        {errors[`option${i}`] && (
                           <small className="text-danger">
-                            {errors[`option${index}`]}
+                            {errors[`option${i}`]}
                           </small>
                         )}
                       </div>
                     ))}
                   </div>
-                  {/* Correct Answer Input */}
-                  <div className="mb-2 row">
+
+                  <div className="row g-3 mb-4">
                     <div className="col-md-6">
-                      <label className="form-label" htmlFor="answer">
-                        Correct Answer
-                      </label>
+                      <label className="form-label">Correct Answer</label>
                       <select
                         className="form-select"
-                        id="answer"
                         name="answer"
                         value={formData.answer}
                         onChange={handleChange}
                         required
                       >
-                        <option value="">Select Correct Answer</option>
-                        {formData.options.map((option, index) => (
-                          <option key={index} value={option}>
-                            {option}
+                        <option value="">Select correct answer</option>
+                        {formData.options.map((opt, i) => (
+                          <option key={i} value={opt}>
+                            {opt}
                           </option>
                         ))}
                       </select>
@@ -326,20 +291,17 @@ const AddQuestions = () => {
                         <small className="text-danger">{errors.answer}</small>
                       )}
                     </div>
-                    {/* Image Input */}
+
                     <div className="col-md-6">
-                      <div className="mb-4">
-                        <label className="form-label" htmlFor="image">
-                          Attach Image (Optional)
-                        </label>
-                        <input
-                          type="file"
-                          className="form-control"
-                          id="image"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                        />
-                      </div>
+                      <label className="form-label">
+                        Attach Image (Optional)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        onChange={handleFileChange}
+                      />
                     </div>
                   </div>
                 </>
@@ -347,33 +309,32 @@ const AddQuestions = () => {
 
               {uploadMethod === "excel" && (
                 <div className="mb-4">
-                  <label className="form-label" htmlFor="excelFile">
-                    Attach Excel File (Optional)
-                  </label>
+                  <label className="form-label">Attach Excel File</label>
                   <input
                     type="file"
                     className="form-control"
-                    id="excelFile"
                     accept=".xlsx"
                     onChange={handleExcelFileChange}
                   />
+                  {errors.excelFile && (
+                    <small className="text-danger">{errors.excelFile}</small>
+                  )}
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary w-100">
-                Submit
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </form>
           </div>
         </div>
 
-        <div
-          className="tab-pane fade"
-          id="tab2"
-          role="tabpanel"
-          aria-labelledby="tab2-tab"
-        >
-          <Questions /> {/* Render the Questions component here */}
+        <div className="tab-pane fade" id="tab2" role="tabpanel">
+          <Questions />
         </div>
       </div>
     </>

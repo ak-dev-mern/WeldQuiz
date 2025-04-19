@@ -5,6 +5,7 @@ const initialState = {
   username: Cookies.get("username") || null,
   role: Cookies.get("role") || null,
   token: Cookies.get("token") || null,
+  email: Cookies.get("email") || null,
 };
 
 const studentSlice = createSlice({
@@ -14,6 +15,7 @@ const studentSlice = createSlice({
     setStudent: (state, action) => {
       state.username = action.payload.username;
       state.role = action.payload.role;
+      state.email = action.payload.email;
       state.token = action.payload.token;
 
       // Store in cookies
@@ -27,6 +29,11 @@ const studentSlice = createSlice({
         secure: true,
         sameSite: "Strict",
       });
+      Cookies.set("email", action.payload.email, {
+        expires: 7,
+        secure: true,
+        sameSite: "Strict",
+      });
       Cookies.set("token", action.payload.token, {
         expires: 7,
         secure: true,
@@ -36,12 +43,14 @@ const studentSlice = createSlice({
     logoutStudent: (state) => {
       state.username = null;
       state.role = null;
+      state.email = null;
       state.token = null;
 
       // Remove from cookies
       Cookies.remove("token");
       Cookies.remove("role");
       Cookies.remove("username");
+      Cookies.remove("email");
     },
   },
 });

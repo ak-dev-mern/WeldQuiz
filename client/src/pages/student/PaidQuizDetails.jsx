@@ -5,12 +5,14 @@ import axios from "axios";
 import Navbar from "../../components/Navbar";
 import Header from "../../components/Header";
 import { getToken } from "../../auth/auth";
+import Footer from "../../components/Footer";
+import Poster from "../../components/Poster";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const token = getToken("token");
 
 const PaidQuizDetails = () => {
-  const { category } = useParams();
+  const { category, lesson } = useParams();
   const navigate = useNavigate();
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -22,32 +24,32 @@ const PaidQuizDetails = () => {
   const questionsPerPage = 10;
 
   const {
-    data: questions,
+    data: questionsData,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["paid-quiz-questions", category],
+    queryKey: ["paid-quiz-questions", category, lesson],
     queryFn: async () => {
-      const res = await axios.get(
-        `${API_URL}/api/questions/getquestions?category=${encodeURIComponent(
-          category
-        )}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`${API_URL}/api/questions/getquestions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // Find the matching category group and return its questions
-      const categoryGroup = res.data.find(
+      // Find the matching category and lesson
+      const categoryData = res.data.find(
         (group) => group.category === category
       );
-      return categoryGroup ? categoryGroup.questions : [];
+
+      if (!categoryData) return [];
+
+      const lessonData = categoryData.lessons.find((l) => l.lesson === lesson);
+
+      return lessonData ? lessonData.questions : [];
     },
     enabled: !!token,
   });
 
   useEffect(() => {
-    if (!questions || submitted) return;
+    if (!questionsData || submitted) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -59,16 +61,16 @@ const PaidQuizDetails = () => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [questions, submitted]);
+  }, [questionsData, submitted]);
 
   const handleSelectAnswer = (questionId, selectedOption) => {
     setAnswers({ ...answers, [questionId]: selectedOption });
   };
 
   const handleSubmit = () => {
-    if (!questions) return;
+    if (!questionsData) return;
 
-    const unansweredQuestions = questions.filter(
+    const unansweredQuestions = questionsData.filter(
       (q) => !answers.hasOwnProperty(q.id)
     );
     if (unansweredQuestions.length > 0 && timeLeft > 0) {
@@ -78,7 +80,7 @@ const PaidQuizDetails = () => {
     }
 
     let correctCount = 0;
-    questions.forEach((q) => {
+    questionsData.forEach((q) => {
       if (answers[q.id] === q.answer) correctCount++;
     });
 
@@ -104,8 +106,8 @@ const PaidQuizDetails = () => {
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
-  const totalPages = Math.ceil((questions?.length || 0) / questionsPerPage);
-  const paginatedQuestions = questions?.slice(
+  const totalPages = Math.ceil((questionsData?.length || 0) / questionsPerPage);
+  const paginatedQuestions = questionsData?.slice(
     (currentPage - 1) * questionsPerPage,
     currentPage * questionsPerPage
   );
@@ -117,14 +119,25 @@ const PaidQuizDetails = () => {
       <div className="text-danger text-center">Error loading questions.</div>
     );
 
+  if (!questionsData || questionsData.length === 0) {
+    return (
+      <div className="text-center my-4">
+        <p>No questions found for this lesson.</p>
+        <button className="btn btn-primary" onClick={() => navigate(-1)}>
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navbar />
-      <Header title={category} />
-      <div className="container my-5" style={{width:"1200px"}}>
+      <Header title={`${category} - ${lesson}`} />
+      <div className="container my-5" style={{ width: "1200px" }}>
         <div className="d-flex justify-content-between align-items-center mb-3 bg-light p-2 px-4 rounded rounded-2">
           <h3 className="mt-1" style={{ color: "orangered" }}>
-            Start Quiz
+            {lesson} Quiz
           </h3>
           {!submitted && (
             <div
@@ -213,7 +226,6 @@ const PaidQuizDetails = () => {
           ))}
         </form>
 
-        {/* Pagination Buttons */}
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-4">
@@ -254,7 +266,7 @@ const PaidQuizDetails = () => {
               className="btn btn-default mt-3 border-0"
               onClick={() => navigate(-1)}
             >
-              Back to category
+              Back to Lessons
             </button>
             <button className="btn btn-success mt-3" onClick={handleSubmit}>
               Submit Quiz
@@ -273,10 +285,10 @@ const PaidQuizDetails = () => {
                 <div className="modal-body text-center">
                   <h4>
                     ✅ You scored <strong>{score}</strong> out of{" "}
-                    <strong>{questions.length}</strong>
+                    <strong>{questionsData.length}</strong>
                   </h4>
                   <p>
-                    {score >= 5
+                    {score >= questionsData.length / 2
                       ? "Great job! You did well."
                       : "Keep practicing to improve!"}
                   </p>
@@ -285,18 +297,14 @@ const PaidQuizDetails = () => {
                   <button className="btn btn-primary" onClick={handleReset}>
                     Try Again
                   </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => navigate(-1)}
-                  >
-                    Back to Categories
-                  </button>
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
+      <Poster />
+      <Footer />
     </>
   );
 };

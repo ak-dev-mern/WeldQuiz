@@ -14,10 +14,11 @@ import {
   FaRegThumbsUp,
 } from "react-icons/fa"; // Import icons
 import PaidQuiz from "../../components/PaidQuiz";
-import DemoQuestions from "../../components/Demoquestions";
+import DemoQuestions from "../../components/DemoQuestions";
 import MyDiscussion from "../../components/MyDiscussion";
 import MyFeedback from "../../components/MyFeedback";
 import SubscriptionDetails from "../../components/SubscriptionDetails";
+import UserOverview from "../../components/UserOverview";
 
 function StudentDashboard() {
   const [selectedSection, setSelectedSection] = useState("overview");
@@ -37,7 +38,7 @@ function StudentDashboard() {
             sidebarCollapsed ? "sidebar-collapsed" : ""
           }`}
           style={{
-            width: sidebarCollapsed ? "80px" : "200px",
+            width: sidebarCollapsed ? "80px" : "250px",
             transition: "width 0.3s",
           }}
         >
@@ -61,7 +62,7 @@ function StudentDashboard() {
             <li>
               <Button
                 variant="link text-light text-decoration-none"
-                title="Overview"
+                title="User Overview"
                 onClick={() => setSelectedSection("overview")}
               >
                 {!sidebarCollapsed && "Overview"}
@@ -126,7 +127,7 @@ function StudentDashboard() {
           {/* Conditionally render sections based on selectedSection */}
           {selectedSection === "overview" && (
             <Container>
-              <h4>Overview of Activity</h4>
+              <UserOverview />
             </Container>
           )}
 

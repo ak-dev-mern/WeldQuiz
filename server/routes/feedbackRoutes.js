@@ -4,18 +4,34 @@ import { body, param, validationResult } from "express-validator";
 import Feedback from "../models/Feedback.js";
 import authMiddleware from "../middlewares/authMiddleware.js"; // Middleware for auth
 
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // 🟢 Get All Feedbacks (for admin - all at once)
 app.get("/getfeedbacks", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = (page - 1) * limit;
+
   try {
-    const feedbacks = await Feedback.findAll({
+    const { count, rows: feedbacks } = await Feedback.findAndCountAll({
       order: [["createdAt", "DESC"]],
+      limit,
+      offset,
     });
 
-    return res.json({ feedbacks });
+    return res.json({
+      success: true,
+      feedbacks,
+      pagination: {
+        total: count,
+        pages: Math.ceil(count / limit),
+        currentPage: page,
+        perPage: limit,
+      },
+    });
   } catch (error) {
     console.error("Error fetching feedbacks:", error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -88,26 +104,36 @@ app.delete("/deletefeedbacks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-export default app;
-
-
-// 🟢 Get paginated feedbacks by logged-in user
+// ✅ GET /api/feedbacks/myfeedbacks?page=1&limit=10
 app.get("/myfeedbacks", authMiddleware, async (req, res) => {
   try {
-    let { page, limit } = req.query;
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 5;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const { rows: feedbacks, count: total } = await Feedback.findAndCountAll({
+    // ✅ Count all feedbacks for this user
+    const total = await Feedback.count({
+      where: { user_id: req.user.id },
+    });
+
+    // ✅ Get paginated rows
+    const feedbacks = await Feedback.findAll({
       where: { user_id: req.user.id },
       order: [["createdAt", "DESC"]],
       limit,
       offset,
     });
 
-    res.json({ feedbacks, total });
+    res.json({
+      feedbacks,
+      total, // ✅ Total feedbacks regardless of pagination
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    });
   } catch (err) {
+    console.error("Error fetching user's feedbacks:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
+export default app;

@@ -92,8 +92,8 @@ const FeedbacksTable = () => {
                   <td>{feedback.username}</td>
                   <td>{feedback.rating}</td>
                   <td>{feedback.feedback}</td>
-                  <td>{new Date(feedback.createdAt).toLocaleDateString()}</td>
-                  <td>{new Date(feedback.updatedAt).toLocaleDateString()}</td>
+                  <td>{new Date(feedback.createdAt).toLocaleString()}</td>
+                  <td>{new Date(feedback.updatedAt).toLocaleString()}</td>
                 </tr>
               ))
             ) : (

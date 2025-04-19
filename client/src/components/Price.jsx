@@ -91,7 +91,9 @@ const Price = () => {
                 <p>{plan.description}</p>
               </div>
               <div className="card-body">
-                {plan.features?.length > 0 ? (
+                {plan &&
+                Array.isArray(plan.features) &&
+                plan.features?.length > 0 ? (
                   plan.features.map((feature, idx) => (
                     <h5 className="my-3" key={idx}>
                       <i className="bi bi-check-circle-fill text-success"></i>{" "}

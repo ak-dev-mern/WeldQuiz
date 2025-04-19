@@ -66,20 +66,51 @@ const SubscriptionDetails = () => {
           <div className="col-md-8">
             <div className="card shadow border-0">
               <div className="card-body">
-                <h3 className="mb-4 text-center">Subscription Details</h3>
-                <p>
-                  <strong>Plan:</strong> {plan}
-                </p>
-                <p>
-                  <strong>Status:</strong> {status}
-                </p>
-                <p>
-                  <strong>Start Date:</strong> {formattedStartDate}
-                </p>
-                <p>
-                  <strong>End Date:</strong> {formattedEndDate}
-                </p>
-                <div className="text-center">
+                <h2 className="mb-4 text-center">Subscription Details</h2>
+                <div className="row g-3 p-3">
+                  <div className="col-md-6">
+                    <div
+                      className="rounded p-4 text-white shadow"
+                      style={{ backgroundColor: "orangered" }}
+                    >
+                      <h5 className="text-center m-0">
+                        <strong>Plan:</strong> {plan}
+                      </h5>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div
+                      className="rounded p-4 text-white shadow"
+                      style={{ backgroundColor: "orangered" }}
+                    >
+                      <h5 className="text-center m-0">
+                        <strong>Status:</strong> {status}
+                      </h5>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div
+                      className="rounded p-4 text-white shadow"
+                      style={{ backgroundColor: "orangered" }}
+                    >
+                      <h5 className="text-center m-0">
+                        <strong>Start Date:</strong> {formattedStartDate}
+                      </h5>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div
+                      className="rounded p-4 text-white shadow"
+                      style={{ backgroundColor: "orangered" }}
+                    >
+                      <h5 className="text-center m-0">
+                        <strong>End Date:</strong> {formattedEndDate}
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center my-4 ">
                   <button
                     className="btn btn-sm py-0 px-3"
                     style={{ backgroundColor: "orangered", color: "white" }}

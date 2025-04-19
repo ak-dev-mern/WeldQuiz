@@ -2,3 +2,25 @@
   font-weight: 800;
   transition: 0.3s ease-in-out;
 }
+
+.masonry-grid {
+  column-count: 1;
+  column-gap: 1rem;
+}
+
+@media (min-width: 576px) {
+  .masonry-grid {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 992px) {
+  .masonry-grid {
+    column-count: 3;
+  }
+}
+
+.masonry-card {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}

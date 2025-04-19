@@ -16,6 +16,13 @@ const Question = sequelize.define(
         notEmpty: true,
       },
     },
+    lesson: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
     question: {
       type: DataTypes.TEXT,
       allowNull: false,

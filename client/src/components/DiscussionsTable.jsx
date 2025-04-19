@@ -89,8 +89,8 @@ const DiscussionsTable = () => {
                   <td>{discussion.created_name}</td>
                   <td>{discussion.title}</td>
                   <td>{discussion.description}</td>
-                  <td>{new Date(discussion.createdAt).toLocaleDateString()}</td>
-                  <td>{new Date(discussion.updatedAt).toLocaleDateString()}</td>
+                  <td>{new Date(discussion.createdAt).toLocaleString()}</td>
+                  <td>{new Date(discussion.updatedAt).toLocaleString()}</td>
                 </tr>
               ))
             ) : (

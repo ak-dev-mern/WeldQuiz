@@ -19,6 +19,7 @@ import DiscussionsTable from "../../components/DiscussionsTable";
 import FeedbacksTable from "../../components/FeedbacksTable";
 import MessagesTable from "../../components/MessagesTable";
 import PlanDetails from "../../components/PlanDetails";
+import AdminOverview from "../../components/AdminOverview";
 
 function AdminDashboard() {
   const [selectedSection, setSelectedSection] = useState("overview");
@@ -38,7 +39,7 @@ function AdminDashboard() {
             sidebarCollapsed ? "sidebar-collapsed" : ""
           }`}
           style={{
-            width: sidebarCollapsed ? "80px" : "170px",
+            width: sidebarCollapsed ? "80px" : "250px",
             transition: "width 0.3s",
           }}
         >
@@ -63,6 +64,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("overview")}
+                title="Admin Overview"
               >
                 {!sidebarCollapsed && "Overview"}
                 {sidebarCollapsed && <FaRegClipboard />}
@@ -72,6 +74,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("discussions")}
+                title="Discussions"
               >
                 {!sidebarCollapsed && "Discussions"}
                 {sidebarCollapsed && <FaCommentAlt />}
@@ -81,6 +84,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("feedbacks")}
+                title="Feedbacks"
               >
                 {!sidebarCollapsed && "Feedbacks"}
                 {sidebarCollapsed && <FaRegThumbsUp />}
@@ -90,6 +94,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("messages")}
+                title="Messages"
               >
                 {!sidebarCollapsed && "Messages"}
                 {sidebarCollapsed && <FaCommentAlt />}
@@ -99,6 +104,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("questions")}
+                title="Questions"
               >
                 {!sidebarCollapsed && "Questions"}
                 {sidebarCollapsed && <FaQuestionCircle />}
@@ -108,6 +114,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("users")}
+                title="User List"
               >
                 {!sidebarCollapsed && "Users"}
                 {sidebarCollapsed && <FaUser />}
@@ -117,6 +124,7 @@ function AdminDashboard() {
               <Button
                 variant="link text-light text-decoration-none"
                 onClick={() => setSelectedSection("plans")}
+                title="Plans"
               >
                 {!sidebarCollapsed && "Plans"}
                 {sidebarCollapsed && <FaCreditCard />}
@@ -130,8 +138,7 @@ function AdminDashboard() {
           {/* Conditionally render sections based on selectedSection */}
           {selectedSection === "overview" && (
             <Container>
-              <h4>Overview of Activity</h4>
-              {/* Show stats like total payments, total discussions, etc. */}
+              <AdminOverview />
             </Container>
           )}
 

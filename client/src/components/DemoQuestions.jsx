@@ -4,6 +4,7 @@ import axios from "axios";
 import { getToken } from "../auth/auth";
 import { Modal } from "react-bootstrap";
 import "../style/DemoQuestions.css";
+import { useMemo } from "react";
 
 const DemoQuestions = () => {
   const token = getToken();
@@ -32,15 +33,29 @@ const DemoQuestions = () => {
       );
       return response.data;
     },
-    enabled: true,
     staleTime: 1000,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     enabled: !!token,
   });
 
-  const questions =
-    categories?.flatMap((category) => category.questions).slice(0, 10) || [];
+  // Flatten the questions from all categories and lessons
+  const allQuestions = categories?.flatMap(
+    (category) =>
+      category.lessons.flatMap((lesson) =>
+        lesson.questions.map((question) => ({
+          ...question,
+          category: category.category,
+          lesson: lesson.lesson,
+        }))
+      ) || []
+  );
+
+  // Select 10 random questions
+  const questions = useMemo(() => {
+    const questionList = allQuestions || [];
+    return questionList.slice(0, 10);
+  }, [allQuestions]);
 
   useEffect(() => {
     if (quizStarted && timeLeft > 0) {

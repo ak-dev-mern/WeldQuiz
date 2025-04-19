@@ -59,8 +59,16 @@ router.post(
     { name: "excelFile", maxCount: 1 },
   ]),
   async (req, res) => {
-    const { category, question, option1, option2, option3, option4, answer } =
-      req.body;
+    const {
+      category,
+      lesson,
+      question,
+      option1,
+      option2,
+      option3,
+      option4,
+      answer,
+    } = req.body;
 
     if (req.files && req.files.excelFile) {
       // Handle Excel file upload
@@ -74,6 +82,7 @@ router.post(
         for (const row of data) {
           const {
             category,
+            lesson,
             question,
             option1,
             option2,
@@ -83,6 +92,7 @@ router.post(
           } = row;
           if (
             !category ||
+            !lesson ||
             !question ||
             !option1 ||
             !option2 ||
@@ -97,6 +107,7 @@ router.post(
 
           await Question.create({
             category,
+            lesson,
             question,
             option1,
             option2,
@@ -118,6 +129,7 @@ router.post(
       // Handle manual input
       if (
         !category ||
+        !lesson ||
         !question ||
         !option1 ||
         !option2 ||
@@ -133,6 +145,7 @@ router.post(
       try {
         const newQuestion = await Question.create({
           category,
+          lesson,
           question,
           option1,
           option2,
@@ -154,7 +167,6 @@ router.post(
   }
 );
 
-
 // GET: Fetch all unique categories
 router.get("/categories", authMiddleware, async (req, res) => {
   try {
@@ -173,9 +185,9 @@ router.get("/categories", authMiddleware, async (req, res) => {
   }
 });
 
-// GET: Fetch all questions grouped by category with optional filters
+// GET: Fetch all questions grouped by category and lesson with optional filters
 router.get("/getquestions", authMiddleware, async (req, res) => {
-  const { category, question, answer } = req.query;
+  const { category, lesson, question, answer } = req.query;
 
   try {
     // Build the filter object dynamically
@@ -187,9 +199,15 @@ router.get("/getquestions", authMiddleware, async (req, res) => {
       };
     }
 
+    if (lesson) {
+      filters.lesson = {
+        [Op.like]: `%${lesson}%`, // Partial match for lesson
+      };
+    }
+
     if (question) {
       filters.question = {
-        [Op.like]: `%${question}%`, // Partial match for question
+        [Op.like]: `%${question}%`, // Partial match for question text
       };
     }
 
@@ -202,13 +220,15 @@ router.get("/getquestions", authMiddleware, async (req, res) => {
     // Fetch filtered questions
     const questions = await Question.findAll({ where: filters });
 
-    // Group questions by category
-    const groupedQuestions = questions.reduce((acc, question) => {
-      const category = question.category;
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push({
+    // Group questions by category -> lesson
+    const grouped = questions.reduce((acc, question) => {
+      const category = question?.category || "Uncategorized";
+      const lesson = question?.lesson || "Unspecified Lesson";
+
+      if (!acc[category]) acc[category] = {};
+      if (!acc[category][lesson]) acc[category][lesson] = [];
+
+      acc[category][lesson].push({
         id: question.id,
         question: question.question,
         option1: question.option1,
@@ -219,21 +239,29 @@ router.get("/getquestions", authMiddleware, async (req, res) => {
         imageUrl: question.image
           ? `${req.protocol}://${req.get("host")}/uploads/${question.image}`
           : null,
-        createdAt: question.createdAt, // Include createdAt
-        updatedAt: question.updatedAt, // Include updatedAt
+        createdAt: question.createdAt,
+        updatedAt: question.updatedAt,
       });
+
       return acc;
     }, {});
 
-    // Convert the grouped object into an array of categories with nested questions
-    const result = Object.keys(groupedQuestions).map((category) => ({
+    // Convert grouped object to array format
+    const result = Object.entries(grouped).map(([category, lessonsObj]) => ({
       category,
-      questions: groupedQuestions[category],
+      lessons: Object.entries(lessonsObj).map(([lesson, questions]) => ({
+        lesson,
+        questions,
+      })),
     }));
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch questions" });
+    console.error("Error fetching grouped questions:", error);
+    res.status(500).json({
+      error: "Failed to fetch grouped questions",
+      details: error.message,
+    });
   }
 });
 
@@ -271,8 +299,16 @@ router.put(
   upload.single("image"), // Handle image upload
   async (req, res) => {
     const { id } = req.params;
-    const { category, question, option1, option2, option3, option4, answer } =
-      req.body;
+    const {
+      category,
+      lesson,
+      question,
+      option1,
+      option2,
+      option3,
+      option4,
+      answer,
+    } = req.body;
 
     try {
       // Find the question by ID
@@ -283,6 +319,7 @@ router.put(
 
       // Update question data
       questionToUpdate.category = category;
+      questionToUpdate.lesson = lesson;
       questionToUpdate.question = question;
       questionToUpdate.option1 = option1;
       questionToUpdate.option2 = option2;
