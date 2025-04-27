@@ -33,7 +33,7 @@ const Contact = () => {
                 text: "Email us at weldquiz@gmail.com and get a reply within 24 hours.",
               },
             ].map((contact, index) => (
-              <div key={index} className="col-md-4 my-5 pt-5 m-auto">
+              <div key={index} className="col-md-4 my-md-5 pt-5 m-auto">
                 <div className="card p-4 shadow p-3">
                   <div className="card-top-image">
                     <img

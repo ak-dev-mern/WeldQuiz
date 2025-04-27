@@ -127,6 +127,9 @@ const AdminOverview = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["adminOverview"],
     queryFn: fetchAdminOverviewData,
+    staleTime: 0,
+    refetchInterval: 5000,
+    keepPreviousData: true,
   });
 
   if (isLoading) {

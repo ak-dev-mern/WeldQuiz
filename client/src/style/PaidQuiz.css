@@ -34,3 +34,9 @@
   transform: translateY(-3px);
   transition: transform 0.3s ease;
 }
+
+@media (max-width: 600px) {
+  .paid-quiz-details {
+    width: 100% !important;
+  }
+}

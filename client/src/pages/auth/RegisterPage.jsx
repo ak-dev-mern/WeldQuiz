@@ -177,7 +177,7 @@ const RegisterPage = () => {
   return (
     <div className="container-fluid register">
       <div>
-        <img src={orangeWave} alt="orangeWave" />
+        <img className="bg-img" src={orangeWave} alt="orangeWave" />
       </div>
 
       <div className="register-form-container">
@@ -203,7 +203,7 @@ const RegisterPage = () => {
               </div>
               <div
                 className="form-group my-3"
-                onMouseEnter={() => setShowPasswordPopover(true)}
+                onClick={() => setShowPasswordPopover(true)}
                 onMouseLeave={() => setShowPasswordPopover(false)}
               >
                 <div className="input-group shadow">

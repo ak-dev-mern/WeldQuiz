@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Container, Table, Button } from "react-bootstrap";
+import { useState, useEffect } from "react";
+import { Container, Button } from "react-bootstrap";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
 import Header from "../../components/Header";
@@ -8,7 +8,6 @@ import {
   FaBars,
   FaCommentAlt,
   FaUser,
-  FaCreditCard,
   FaQuestionCircle,
   FaRegClipboard,
   FaRegThumbsUp,
@@ -22,127 +21,171 @@ import UserOverview from "../../components/UserOverview";
 
 function StudentDashboard() {
   const [selectedSection, setSelectedSection] = useState("overview");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // State to control sidebar visibility
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <>
+    <div>
       <Navbar />
       <Header title={"Student Dashboard"} />
 
-      <div className="d-flex border-top dashboard">
-        {/* Sidebar Navigation */}
+      <div className=" dashboard border-top">
+        {/* Sidebar or Topbar */}
         <div
-          className={`sidebar border-end text-white p-3 ${
-            sidebarCollapsed ? "sidebar-collapsed" : ""
+          className={`${
+            isMobile
+              ? "topbar d-flex justify-content-around align-items-center p-md-2 border-bottom"
+              : `sidebar border-end text-white p-md-3 ${
+                  sidebarCollapsed ? "sidebar-collapsed" : ""
+                }`
           }`}
           style={{
-            width: sidebarCollapsed ? "80px" : "250px",
+            width: isMobile ? "100%" : sidebarCollapsed ? "80px" : "250px",
             transition: "width 0.3s",
           }}
         >
-          <Button
-            variant="link"
-            onClick={toggleSidebar}
-            className=" toggle-sidebar-btn d-block mb-3 bg-light w-100 text-start py-1 px-2 text-decoration-none"
-            style={{
-              fontSize: "22px",
-              color: "orangered",
-            }}
+          {!isMobile && (
+            <Button
+              variant="link"
+              onClick={toggleSidebar}
+              className="toggle-sidebar-btn d-block mb-3 bg-light w-100 text-start py-1 px-2 text-decoration-none"
+              style={{
+                fontSize: "22px",
+                color: "orangered",
+              }}
+            >
+              <FaBars />{" "}
+              <span
+                className={`fw-bold fs-5 ms-3 ${
+                  sidebarCollapsed ? "d-none" : "d-none d-md-inline"
+                }`}
+              >
+                Menu
+              </span>
+            </Button>
+          )}
+
+          <ul
+            className={`list-unstyled ${
+              isMobile
+                ? "d-flex flex-row w-100 justify-content-around m-0 p-0"
+                : "d-flex flex-column"
+            }`}
           >
-            <FaBars />{" "}
-            {!sidebarCollapsed ? (
-              <span className="fw-bold fs-5 ms-3">Menu</span>
-            ) : (
-              ""
-            )}
-          </Button>
-          <ul className="list-unstyled">
+            {/* Overview */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
-                title="User Overview"
+                title="Overview"
                 onClick={() => setSelectedSection("overview")}
               >
-                {!sidebarCollapsed && "Overview"}
-                {sidebarCollapsed && <FaRegClipboard />}
+                <FaRegClipboard className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Overview</span>
+                )}
               </Button>
             </li>
+
+            {/* Paid Quiz */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
                 title="Paid Quiz"
                 onClick={() => setSelectedSection("paidquiz")}
               >
-                {!sidebarCollapsed && "Paid Quiz"}
-                {sidebarCollapsed && <FaQuestionCircle />}
+                <FaQuestionCircle className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Paid Quiz</span>
+                )}
               </Button>
             </li>
+
+            {/* Demo Questions */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
                 title="Demo Questions"
                 onClick={() => setSelectedSection("demoquestions")}
               >
-                {!sidebarCollapsed && "Start Demo"}
-                {sidebarCollapsed && <FaRegThumbsUp />}
+                <FaRegThumbsUp className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Demo Questions</span>
+                )}
               </Button>
             </li>
+
+            {/* Subscription */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
-                title="Subcription Status"
+                title="Subscription Status"
                 onClick={() => setSelectedSection("subcription")}
               >
-                {!sidebarCollapsed && "Subcription Status"}
-                {sidebarCollapsed && <FaUser />}
+                <FaUser className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Subscription</span>
+                )}
               </Button>
             </li>
+
+            {/* Feedbacks */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
-                title="My Feedbacks"
+                title="Feedbacks"
                 onClick={() => setSelectedSection("feedbacks")}
               >
-                {!sidebarCollapsed && "My Feedbacks"}
-                {sidebarCollapsed && <FaRegClipboard />}
+                <FaRegClipboard className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Feedbacks</span>
+                )}
               </Button>
             </li>
+
+            {/* Discussion */}
             <li>
               <Button
                 variant="link text-light text-decoration-none"
-                title="My Discussion"
+                title="Discussion"
                 onClick={() => setSelectedSection("discussion")}
               >
-                {!sidebarCollapsed && "My Discussion"}
-                {sidebarCollapsed && <FaCommentAlt />}
+                <FaCommentAlt className="fs-4" />
+                {!isMobile && !sidebarCollapsed && (
+                  <span className="ms-2">Discussion</span>
+                )}
               </Button>
             </li>
           </ul>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content */}
         <div className="content py-3" style={{ flex: 1 }}>
-          {/* Conditionally render sections based on selectedSection */}
           {selectedSection === "overview" && (
             <Container>
               <UserOverview />
             </Container>
           )}
-
           {selectedSection === "paidquiz" && (
             <Container>
               <PaidQuiz />
             </Container>
           )}
-
           {selectedSection === "demoquestions" && (
             <Container>
               <DemoQuestions />
             </Container>
           )}
-
           {selectedSection === "subcription" && (
             <Container>
               <SubscriptionDetails />
@@ -162,7 +205,7 @@ function StudentDashboard() {
       </div>
 
       <Footer />
-    </>
+    </div>
   );
 }
 

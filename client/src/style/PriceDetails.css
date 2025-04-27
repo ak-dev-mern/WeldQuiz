@@ -2,8 +2,7 @@
   height: 800px;
 }
 .price-details .cards .card {
-  width: 330px;
-
+  width: auto;
   padding: 20px;
 }
 .price-details .cards .card .card-header {
@@ -42,4 +41,15 @@
 .price-details .card button:hover {
   background-color: orangered !important;
   color: #ffff !important;
+}
+
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+
+@media (max-width: 1024px) {
+  .price-details {
+    height: auto;
+  }
+
 }

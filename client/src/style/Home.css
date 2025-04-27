@@ -134,3 +134,58 @@ button:hover {
   right: 0px;
   top: 80px;
 }
+
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+
+@media (max-width: 1024px) {
+  header {
+    height: auto;
+  }
+  .feature {
+    height: auto;
+    background-color: orangered;
+  }
+
+  .knowledge {
+    height: auto;
+    background-color: #ffff;
+    position: relative;
+  }
+  .experience {
+    height: auto;
+    position: relative;
+    margin-bottom: 0 !important;
+  }
+
+  .experience .people-img {
+    width: 1000px;
+    height: 800px;
+    position: absolute;
+    top: 0px;
+    right: 0;
+  }
+  .experience .people-img img {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+  }
+
+  .experience .content {
+    margin-top: 350px;
+  }
+}
+
+/* ============================
+   Responsive: Small Devices 
+   ============================ */
+
+@media (max-width: 600px) {
+  .feature .card {
+  width:auto;
+}
+  .experience .content {
+    margin-top: 150px !important;
+  }
+}

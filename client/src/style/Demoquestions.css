@@ -70,3 +70,42 @@
   box-shadow: rgba(17, 17, 26, 0.1) 0px 8px 24px,
     rgba(17, 17, 26, 0.1) 0px 16px 56px, rgba(17, 17, 26, 0.1) 0px 24px 80px;
 }
+
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+
+@media (max-width: 1024px) {
+  .demo-questions {
+    width: auto;
+  }
+}
+
+/* ============================
+   Responsive: Small Devices 
+   ============================ */
+
+@media (max-width: 600px) {
+  .demo-questions {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .demo-questions .quiz-guidelines {
+    padding: 5px !important;
+  }
+
+  .demo-questions .card form {
+    padding: 5px !important;
+    width: 100%;
+  }
+  .demo-questions .single-question {
+    width: 100%;
+    padding: 0 !important;
+  }
+
+  .demo-questions .single-question div div {
+    width: 100%;
+    padding: 5px !important;
+  }
+}

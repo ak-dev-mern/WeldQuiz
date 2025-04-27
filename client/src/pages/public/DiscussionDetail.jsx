@@ -7,6 +7,7 @@ import Header from "../../components/Header.jsx";
 import Footer from "../../components/Footer.jsx";
 import "../../style/Discussion.css";
 import { getRole, getToken, getUsername } from "../../auth/auth.js";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,6 +17,8 @@ const DiscussionDetail = () => {
   const [newMessage, setNewMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingMessageText, setEditingMessageText] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
 
   const token = getToken();
   const userName = getUsername();
@@ -117,8 +120,14 @@ const DiscussionDetail = () => {
   };
 
   const handleDeleteMessage = (messageId) => {
-    if (window.confirm("Are you sure you want to delete this message?")) {
-      deleteMessage(messageId);
+    setMessageToDelete(messageId);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (messageToDelete) {
+      deleteMessage(messageToDelete);
+      setShowModal(false);
     }
   };
 
@@ -146,7 +155,7 @@ const DiscussionDetail = () => {
       <Navbar />
       <Header title="Discussion Details" />
 
-      <div className="discussion-page-container card border-0 p-5 shadow">
+      <div className="discussion-page-container discussion-details-container card border-0 p-md-5 shadow">
         <div className="discussion-card">
           <div className="discussion-header text-start">
             <h2>
@@ -278,6 +287,14 @@ const DiscussionDetail = () => {
             ) : (
               <p className="no-messages">No messages yet</p>
             )}
+
+            <DeleteConfirmModal
+              show={showModal}
+              onHide={() => setShowModal(false)}
+              onConfirm={confirmDelete}
+              title="Delete Message?"
+              message="Are you sure you want to delete this message? This action cannot be undone."
+            />
 
             {/* Reply Form */}
             <div className="reply-form">

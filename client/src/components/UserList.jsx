@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "../auth/auth";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "../style/App.css";
 import React from "react";
 import { format } from "date-fns";
 import { Modal } from "react-bootstrap"; // Import Modal from react-bootstrap
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -43,6 +44,8 @@ const UsersList = () => {
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editedUser, setEditedUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   // Filter states for each column
   const [filters, setFilters] = useState({
@@ -92,6 +95,39 @@ const UsersList = () => {
       console.error("Error fetching users:", error);
     },
   });
+
+  // Fetch all customers
+
+  const fetchAllCustomers = async () => {
+    const token = localStorage.getItem("token"); // Adjust if you store token differently
+    const { data } = await axios.get(`${API_URL}/api/payment/all-customers`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return data.customers;
+  };
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["allCustomers"],
+    queryFn: fetchAllCustomers,
+    enabled: !!token,
+    staleTime: 0,
+    refetchInterval: 5000,
+    keepPreviousData: true,
+  });
+
+  // Match email address local to stripe
+
+  const customerList = customers.map((cust) => cust.email);
+  const customerEmailsLower = customerList.map((email) => email?.toLowerCase());
+
+  const usersWithStatus = users.map((user) => ({
+    ...user,
+    status: customerEmailsLower.includes(user.email?.toLowerCase())
+      ? "Active"
+      : "Inactive",
+  }));
 
   const deleteMutation = useMutation({
     mutationFn: async (userId) => {
@@ -154,8 +190,14 @@ const UsersList = () => {
   };
 
   const handleDelete = (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      deleteMutation.mutate(userId);
+    setUserToDelete(userId);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteMutation.mutate(userToDelete);
+      setShowModal(false);
     }
   };
 
@@ -277,6 +319,7 @@ const UsersList = () => {
                   <th>Full Name</th>
                   <th>Age</th>
                   <th>Email</th>
+                  <th>Subscription Status</th>
                   <th>Phone</th>
                   <th>City</th>
                   <th>Country</th>
@@ -292,13 +335,23 @@ const UsersList = () => {
                     <td colSpan="13">No users found</td>
                   </tr>
                 )}
-                {users.map((user, index) => (
+                {usersWithStatus.map((user, index) => (
                   <tr key={user.id || user._id}>
                     <td>{index + 1}</td>
+                    <td>{user.id}</td>
                     <td>{user.username}</td>
                     <td>{user.fullName}</td>
                     <td>{user.age}</td>
                     <td>{user.email}</td>
+                    <td
+                      className={` ${
+                        user.status === "Active"
+                          ? "text-success  fw-bold"
+                          : "text-danger fw-bold"
+                      }`}
+                    >
+                      {user.status}
+                    </td>
                     <td>{user.phone}</td>
                     <td>{user.city}</td>
                     <td>{user.country}</td>
@@ -327,6 +380,13 @@ const UsersList = () => {
                     </td>
                   </tr>
                 ))}
+                <DeleteConfirmModal
+                  show={showModal}
+                  onHide={() => setShowModal(false)}
+                  onConfirm={confirmDelete}
+                  title="Delete User Record?"
+                  message="Are you sure you want to delete this record? This action cannot be undone."
+                />
               </tbody>
             </table>
           </div>

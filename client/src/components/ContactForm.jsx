@@ -57,13 +57,13 @@ const ContactForm = () => {
 
   return (
     <div className="contact-form">
-      <div className="row my-5 py-5">
-        <div className="col-md-6 my-4 px-5 text-light">
+      <div className="row my-md-5 py-5">
+        <div className="col-md-6 my-4 px-md-5 text-light">
           <div>
             <h1 className="my-3 display-4 fw-bold">
               Fill out this form, we’ll get back to you
             </h1>
-            <p className="mb-5 fs-5">
+            <p className="mb-md-5 fs-5">
               We are here to help! Tell us how we can assist, and we’ll reach
               out within 24 hours.
             </p>
@@ -106,7 +106,7 @@ const ContactForm = () => {
         </div>
 
         {/* Contact Form */}
-        <div className="col-md-6 my-5 px-5 border border-2 rounded p-5 shadow contact-form-container h-100">
+        <div className="col-md-6 my-5 px-md-5 border border-2 rounded p-md-5 shadow contact-form-container h-100">
           {submitted && (
             <div
               className="alert alert-success success-message text-center rounded-3"

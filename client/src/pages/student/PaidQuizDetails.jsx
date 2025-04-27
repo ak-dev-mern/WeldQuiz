@@ -134,7 +134,10 @@ const PaidQuizDetails = () => {
     <>
       <Navbar />
       <Header title={`${category} - ${lesson}`} />
-      <div className="container my-5" style={{ width: "1200px" }}>
+      <div
+        className="container paid-quiz-details my-5"
+        style={{ width: "1200px" }}
+      >
         <div className="d-flex justify-content-between align-items-center mb-3 bg-light p-2 px-4 rounded rounded-2">
           <h3 className="mt-1" style={{ color: "orangered" }}>
             {lesson} Quiz

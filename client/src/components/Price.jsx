@@ -70,53 +70,58 @@ const Price = () => {
 
   return (
     <div className="container-fluid px-0 price-container">
-      <div className="container my-5 price-details d-flex flex-column justify-content-center align-items-center">
+      <div className="container my-md-5 price-details d-flex flex-column justify-content-center align-items-center">
         <h1 className="my-5 text-light text-center display-5 fw-bold">
           Choose the right pricing plan that suits your need
         </h1>
 
-        <div className="cards d-flex justify-content-center align-items-center gap-5 my-5 flex-wrap">
-          {plans.map((plan) => (
-            <div
-              className="card price-card text-center shadow"
-              key={plan.plan_id}
-            >
-              <div className="card-header">
-                <h4 className="fw-bold">{plan.plan_name} plan</h4>
-                <div className="d-flex justify-content-center align-items-end">
-                  <p>Rs.</p>
-                  <h1 className="display-4 fw-bold">{plan.price}</h1>
-                  <p className="text-end"> /yearly</p>
+        <div className="container my-md-5 mb-5">
+          <div className="row cards g-4 justify-content-center">
+            {plans.map((plan) => (
+              <div
+                className="col-12 col-sm-6 col-md-4 col-lg-3"
+                key={plan.plan_id}
+              >
+                <div className="card price-card text-center shadow h-100">
+                  <div className="card-header">
+                    <h4 className="fw-bold">{plan.plan_name} Plan</h4>
+                    <div className="d-flex justify-content-center align-items-end">
+                      <p className="mb-0">Rs.</p>
+                      <h1 className="display-5 fw-bold mb-0 mx-1">
+                        {plan.price}
+                      </h1>
+                      <p className="mb-1">/yearly</p>
+                    </div>
+                    <p className="text-muted">{plan.description}</p>
+                  </div>
+                  <div className="card-body d-flex flex-column justify-content-between">
+                    {plan.features?.length > 0 ? (
+                      plan.features.map((feature, idx) => (
+                        <h6 className="my-2" key={idx}>
+                          <i className="bi bi-check-circle-fill text-success me-2"></i>
+                          {feature}
+                        </h6>
+                      ))
+                    ) : (
+                      <h6 className="text-muted">No features listed</h6>
+                    )}
+
+                    <button
+                      className="btn btn-primary w-100 mt-4 rounded-pill"
+                      onClick={() => handlePurchaseClick(plan)}
+                      disabled={loadingPlanId === plan.plan_id}
+                    >
+                      {loadingPlanId === plan.plan_id
+                        ? "Redirecting..."
+                        : isAuthenticated()
+                        ? "Purchase Now"
+                        : "Sign Up to Purchase"}
+                    </button>
+                  </div>
                 </div>
-                <p>{plan.description}</p>
               </div>
-              <div className="card-body">
-                {plan &&
-                Array.isArray(plan.features) &&
-                plan.features?.length > 0 ? (
-                  plan.features.map((feature, idx) => (
-                    <h5 className="my-3" key={idx}>
-                      <i className="bi bi-check-circle-fill text-success"></i>{" "}
-                      {feature}
-                    </h5>
-                  ))
-                ) : (
-                  <h5 className="text-muted">No features listed</h5>
-                )}
-                <button
-                  className="btn btn-primary w-100 mt-3 rounded rounded-5"
-                  onClick={() => handlePurchaseClick(plan)}
-                  disabled={loadingPlanId === plan.plan_id}
-                >
-                  {loadingPlanId === plan.plan_id
-                    ? "Redirecting..."
-                    : isAuthenticated()
-                    ? "Purchase Now"
-                    : "Sign Up to Purchase"}
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

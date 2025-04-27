@@ -18,7 +18,7 @@ const Poster = () => {
     }
   };
   return (
-    <div className="poster d-flex justify-content-around align-items-center">
+    <div className="poster d-md-flex justify-content-around align-items-center">
       <div className="w-25">
         <h1>Ready to grow your business digitally?</h1>
       </div>

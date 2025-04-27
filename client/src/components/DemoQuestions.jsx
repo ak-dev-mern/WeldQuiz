@@ -135,7 +135,7 @@ const DemoQuestions = () => {
               <div className="p-3 text-center quiz-guidelines">
                 <h1>Quiz Guidelines</h1>
                 <h4>Description</h4>
-                <ul>
+                <ul className="p-0">
                   <li>
                     This quiz contains multiple-choice questions from different
                     categories related to welding and quality control.
@@ -148,7 +148,7 @@ const DemoQuestions = () => {
                 </ul>
 
                 <h4 className="mb-3">Rules & Regulations and Scoring</h4>
-                <ul className="d-flex justify-content-center gap-3 aligin-items-center">
+                <ul className="d-md-flex justify-content-center gap-3 aligin-items-center p-0">
                   <div>
                     <li>
                       <strong>Answer Selection:</strong> Click on an option to
@@ -161,7 +161,7 @@ const DemoQuestions = () => {
                   </div>
                   <div>
                     <strong></strong>
-                    <ul>
+                    <ul className="text-center p-0">
                       <li>
                         Correct answers will be highlighted in
                         <span className="bg-success px-3 ms-2"></span>
@@ -192,7 +192,7 @@ const DemoQuestions = () => {
                     className="px-5 d-flex justify-content-between align-items-center sticky-top"
                     style={{
                       backgroundColor: "orangered",
-                      top: "91px",
+                      top: "-20px",
                       zIndex: "1",
                     }}
                   >

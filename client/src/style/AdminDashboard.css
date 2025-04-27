@@ -24,3 +24,23 @@
   break-inside: avoid;
   margin-bottom: 1rem;
 }
+
+.dashboard {
+  height: calc(
+    100vh - 56px - 60px
+  ); /* Adjust if Navbar/Footer height differs */
+  overflow: hidden;
+}
+
+.sidebar {
+  height: 100%;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+.content {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+}

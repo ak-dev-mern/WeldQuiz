@@ -48,3 +48,13 @@ nav .dropdown-menu li button:hover {
   font-size: 18px;
   text-transform: uppercase;
 }
+
+.offcanvas-start {
+  background: var(--bg-color);
+}
+
+@media (max-width: 768px) {
+  nav .profile-menu {
+    margin-left: 0px;
+  }
+}

@@ -55,3 +55,37 @@
   border-radius: 0.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+
+@media (max-width: 1024px) {
+  .feedback-container {
+    width: auto;
+  }
+
+  .feedback-form {
+    width: auto;
+    margin: 0 auto;
+    height: auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .feedback-container {
+    width: auto;
+  }
+
+  .feedback-form {
+    width: auto;
+    margin: 0 auto;
+    height: auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+  }
+}

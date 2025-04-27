@@ -5,6 +5,7 @@ import { getToken } from "../auth/auth";
 import { useEffect, useState, useMemo } from "react";
 import { format, isValid } from "date-fns";
 import { useAppContext } from "../context/AppContext";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -77,6 +78,10 @@ const Questions = () => {
   const queryClient = useQueryClient();
   const { isFunctionEnabled } = useAppContext();
   const [editingQuestionId, setEditingQuestionId] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState(null);
+
   const [formData, setFormData] = useState({
     question: "",
     option1: "",
@@ -155,11 +160,18 @@ const Questions = () => {
     },
   });
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this question?")) {
-      deleteMutation.mutate(id);
+const handleDelete = (id) => {
+  setQuestionToDelete(id);
+  setShowModal(true);
+};
+
+  const confirmDelete = () => {
+    if (questionToDelete) {
+      deleteMutation.mutate(questionToDelete);
+      setShowModal(false);
     }
   };
+
 
   const handleEdit = (question) => {
     setEditingQuestionId(question.id);
@@ -411,6 +423,13 @@ const Questions = () => {
                 </tr>
               ))
             )}
+            <DeleteConfirmModal
+              show={showModal}
+              onHide={() => setShowModal(false)}
+              onConfirm={confirmDelete}
+              title="Delete Question?"
+              message="Are you sure you want to delete this question? This action cannot be undone."
+            />
           </tbody>
         </table>
       </div>

@@ -13,12 +13,15 @@ const Navbar = () => {
   const isAuthenticated = !!token;
   const [navbarScrolled, setNavbarScrolled] = useState(false);
 
+  // NEW states for mobile and offcanvas
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
+
   const handleLogout = () => {
     dispatch(logoutStudent());
     navigate("/");
   };
 
-  // Common nav items for all users
   const commonNavItems = (
     <>
       <li className="nav-item">
@@ -73,7 +76,6 @@ const Navbar = () => {
               Price Details
             </Link>
           </li>
-
           <li>
             <Link className="dropdown-item" to="/others/feedback">
               Feedback
@@ -94,64 +96,6 @@ const Navbar = () => {
     </>
   );
 
-  // // Student-specific nav items
-  // const studentNavItems = isAuthenticated && role === "student" && (
-  //   <li className="nav-item dropdown me-2">
-  //     <a
-  //       className="nav-link link-light dropdown-toggle"
-  //       href="#"
-  //       role="button"
-  //       data-bs-toggle="dropdown"
-  //     >
-  //       Student Panel
-  //     </a>
-  //     <ul className="dropdown-menu">
-  //       <li>
-  //         <Link className="dropdown-item" to="/student/">
-  //           Dashboard
-  //         </Link>
-  //       </li>
-  //       <li>
-  //         <Link className="dropdown-item" to="/student/demoquestions">
-  //           Demo Questions
-  //         </Link>
-  //       </li>
-  //     </ul>
-  //   </li>
-  // );
-
-  // // Admin-specific nav items
-  // const adminNavItems = isAuthenticated && role === "admin" && (
-  //   <li className="nav-item dropdown me-2">
-  //     <a
-  //       className="nav-link link-light dropdown-toggle"
-  //       href="#"
-  //       role="button"
-  //       data-bs-toggle="dropdown"
-  //     >
-  //       Admin Panel
-  //     </a>
-  //     <ul className="dropdown-menu">
-  //       <li>
-  //         <Link className="dropdown-item" to="/admin/dashboard">
-  //           Dashboard
-  //         </Link>
-  //       </li>
-  //       <li>
-  //         <Link className="dropdown-item" to="/admin/addquestions">
-  //           Manage Questions
-  //         </Link>
-  //       </li>
-  //       <li>
-  //         <Link className="dropdown-item" to="/admin/userslist">
-  //           Manage Users
-  //         </Link>
-  //       </li>
-  //     </ul>
-  //   </li>
-  // );
-
-  // Profile dropdown for logged-in users
   const profileDropdown = isAuthenticated && (
     <li className="nav-item dropdown">
       <a
@@ -169,7 +113,7 @@ const Navbar = () => {
         <li>
           <Link
             className="dropdown-item"
-            to={role == "admin" ? "/admin/dashboard" : "/student/dashboard"}
+            to={role === "admin" ? "/admin/dashboard" : "/student/dashboard"}
           >
             Dashboard
           </Link>
@@ -177,7 +121,7 @@ const Navbar = () => {
         <li>
           <Link
             className="dropdown-item"
-            to={role == "student" ? "/student/profile" : "/"}
+            to={role === "student" ? "/student/profile" : "/"}
           >
             My Profile
           </Link>
@@ -191,7 +135,6 @@ const Navbar = () => {
     </li>
   );
 
-  // Auth buttons for non-logged-in users
   const authButtons = !isAuthenticated && (
     <>
       <li className="nav-item px-1">
@@ -217,8 +160,16 @@ const Navbar = () => {
     const handleScroll = () => {
       setNavbarScrolled(window.scrollY >= 30);
     };
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   return (
@@ -240,21 +191,62 @@ const Navbar = () => {
             <h1 className="mt-2">Weld Quiz</h1>
           </Link>
         </div>
+
         <button
           className="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
+          onClick={() => {
+            if (isMobile) {
+              setShowOffcanvas(true);
+            }
+          }}
+          data-bs-toggle={isMobile ? "" : "collapse"}
+          data-bs-target={isMobile ? "" : "#navbarNav"}
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
+
+        <div
+          className={`collapse navbar-collapse ${isMobile ? "d-none" : ""}`}
+          id="navbarNav"
+        >
           <ul className="navbar-nav ms-auto d-flex align-items-center">
             {commonNavItems}
             {profileDropdown}
             {authButtons}
           </ul>
         </div>
+
+        {/* Offcanvas for mobile */}
+        {isMobile && (
+          <div
+            className={`offcanvas offcanvas-start ${
+              showOffcanvas ? "show" : ""
+            }`}
+            tabIndex="-1"
+            style={{
+              visibility: showOffcanvas ? "visible" : "hidden",
+              backgroundColor: "#343a40",
+              transition: "transform 0.3s ease-in-out",
+            }}
+          >
+            <div className="offcanvas-header">
+              <h5 className="offcanvas-title text-white">Weld Quiz</h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setShowOffcanvas(false)}
+              ></button>
+            </div>
+            <div className="offcanvas-body">
+              <ul className="navbar-nav d-flex align-items-start">
+                {commonNavItems}
+                {profileDropdown}
+                {authButtons}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

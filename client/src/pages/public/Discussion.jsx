@@ -8,6 +8,7 @@ import "../../style/Discussion.css";
 import { getRole, getToken, getUsername } from "../../auth/auth.js";
 import { Link } from "react-router-dom";
 import { textLengthLimit } from "../../utils/utils.js";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const DISCUSSIONS_PER_PAGE = 5;
@@ -24,6 +25,9 @@ const Discussion = () => {
     title: "",
     description: "",
   });
+
+  const [showModal, setShowModal] = useState(false);
+  const [discussionToDelete, setDiscussionToDelete] = useState(null);
 
   const token = getToken();
   const userName = getUsername();
@@ -113,8 +117,14 @@ const Discussion = () => {
   };
 
   const handleDeleteDiscussion = (discussionId) => {
-    if (window.confirm("Are you sure you want to delete this discussion?")) {
-      deleteDiscussion(discussionId);
+    setDiscussionToDelete(discussionId);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (discussionToDelete) {
+      deleteDiscussion(discussionToDelete);
+      setShowModal(false);
     }
   };
 
@@ -334,6 +344,14 @@ const Discussion = () => {
               </div>
             ))
           )}
+
+          <DeleteConfirmModal
+            show={showModal}
+            onHide={() => setShowModal(false)}
+            onConfirm={confirmDelete}
+            title="Delete Discussion?"
+            message="Are you sure you want to delete this discussion? This action cannot be undone."
+          />
 
           {/* Bottom pagination controls */}
           {totalPages > 1 && (

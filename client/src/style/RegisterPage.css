@@ -33,7 +33,6 @@
   width: 700px !important;
   height: auto;
   margin-top: 10px;
-  
 }
 
 .register-card {
@@ -88,4 +87,106 @@
   font-size: 14px;
   color: red;
   margin-bottom: 5px;
+}
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+@media (max-width: 1024px) {
+  .register {
+    background: var(--bg-color);
+  }
+  .register-card {
+    width: 100%;
+    right: 50%;
+    top: 80%;
+    transform: translateX(50%);
+    margin: 0 auto;
+    background-color: #fff;
+  }
+
+  .register-form-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10 !important;
+  }
+
+  .register img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: none;
+  }
+
+  .register-card .image {
+    display: none;
+  }
+
+  .register-card h1,
+  .register-card p {
+    margin: 10px 0 !important;
+  }
+}
+
+/* ============================
+   Responsive: Small Devices 
+   ============================ */
+@media (max-width: 600px) {
+  .register {
+    width: 100%;
+    height: 100%;
+    overflow-y: hidden;
+  }
+
+  .register .bg-img {
+    display: none !important;
+  }
+
+  .register-form-container {
+    height: 100vh;
+    width: 100%;
+  }
+  .register-form-container p {
+    margin: 15px !important;
+  }
+
+  .register-form-container form {
+    width: 100% !important;
+    margin-top: 10px;
+    height: 100vh !important;
+  }
+
+  .register-card {
+    width: 100%;
+    height: auto;
+    top: 950px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    background-color: #ffff;
+  }
+
+  .register-card h1,
+  .register-card p {
+    font-size: 18px;
+    margin: 10px 0 !important;
+  }
+
+  .register-card .image {
+    width: 40px !important;
+    height: 40px !important;
+    display: none;
+  }
+
+  .register-card .image img {
+    width: 40%;
+    height: 40%;
+    margin: 0 auto;
+    display: block;
+    transform: rotate(0deg);
+    display: none;
+  }
 }

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "../auth/auth";
 import { textLengthLimit } from "../utils/utils";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -48,13 +49,14 @@ const MyFeedback = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const queryClient = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState(null);
 
-const { data, isLoading, isError, error } = useQuery({
-  queryKey: ["myFeedbacks", page, limit],
-  queryFn: () => fetchMyFeedbacks({ page, limit }), // ✅ passes page/limit
-  keepPreviousData: true,
-});
-
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["myFeedbacks", page, limit],
+    queryFn: () => fetchMyFeedbacks({ page, limit }), // ✅ passes page/limit
+    keepPreviousData: true,
+  });
 
   const mutation = useMutation({
     mutationFn: deleteFeedback,
@@ -64,8 +66,14 @@ const { data, isLoading, isError, error } = useQuery({
   });
 
   const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this feedback?")) {
-      mutation.mutate(id);
+    setFeedbackToDelete(id);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (feedbackToDelete) {
+      mutation.mutate(feedbackToDelete);
+      setShowModal(false);
     }
   };
 
@@ -151,6 +159,13 @@ const { data, isLoading, isError, error } = useQuery({
             </div>
           </div>
         ))}
+        <DeleteConfirmModal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          onConfirm={confirmDelete}
+          title="Delete Feedback?"
+          message="Are you sure you want to delete this feedback? This action cannot be undone."
+        />
       </div>
 
       {/* Pagination */}

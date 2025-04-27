@@ -367,3 +367,34 @@
   align-items: center;
   margin-bottom: 1rem;
 }
+
+/* ============================
+   Responsive: Small Devices 
+   ============================ */
+
+@media (max-width: 600px) {
+  .discussion-page-container {
+    margin: 0.5rem auto;
+    padding: 0.5rem;
+  }
+
+  .discussion-details-container {
+    margin: 0.5rem;
+  }
+
+  .discussion-header-section {
+    display: block;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    width: 100% !important;
+  }
+
+  .message-header {
+    display: block;
+    font-size: 0.7rem;
+  }
+
+  .message-header p {
+    margin: 5px;
+  }
+}

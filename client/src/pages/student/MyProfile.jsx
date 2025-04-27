@@ -108,9 +108,12 @@ const MyProfile = () => {
       <Header title="My Profile" />
       <div className="container mt-5">
         <div className="row justify-content-center my-5">
-          <div className="user-info border-0 d-flex justify-content-start align-items-center">
+          <div className="user-info border-0 d-md-flex justify-content-start align-items-center">
             <div className="box rounded shadow-lg box-1 p-5 d-flex align-items-center flex-column justify-content-center text-center">
-              <div className="profile-pic rounded-circle d-flex align-items-center justify-content-center">
+              <div
+                className="profile-pic rounded-circle d-flex align-items-center justify-content-center"
+                style={{ backgroundColor: "orangered" }}
+              >
                 <h1 className="display-2 fw-bold">
                   {" "}
                   {getUsernameInitials(user.username)}
@@ -125,7 +128,7 @@ const MyProfile = () => {
               </h2>
               {editMode ? (
                 <form onSubmit={handleSubmit}>
-                  <div className="d-flex justify-content-around align-items-center gap-5">
+                  <div className="d-md-flex justify-content-around align-items-center gap-5">
                     <div className="form-group">
                       <label className="form-label">Full Name</label>
                       <input
@@ -170,7 +173,7 @@ const MyProfile = () => {
                       />
                     </div>
                   </div>
-                  <div className="d-flex justify-content-around align-items-center gap-5">
+                  <div className="d-md-flex justify-content-around align-items-center gap-5">
                     <div className="form-group">
                       <label className="form-label">Country</label>
                       <input
@@ -217,8 +220,8 @@ const MyProfile = () => {
                 </form>
               ) : (
                 <>
-                  <div className="w-100">
-                    <div className="d-flex justify-content-between align-items-center my-5">
+                  <div className="w-100 user-details">
+                    <div className="d-md-flex justify-content-between align-items-center my-5">
                       <p className="fs-5 p-2 px-5">
                         <strong>Email:</strong> {user.email}
                       </p>
@@ -226,7 +229,7 @@ const MyProfile = () => {
                         <strong>Phone:</strong> {user.phone}
                       </p>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center mb-5">
+                    <div className="d-md-flex justify-content-between align-items-center mb-5">
                       <p className="fs-5 p-2 px-5">
                         <strong>Age:</strong> {user.age}
                       </p>
@@ -234,7 +237,7 @@ const MyProfile = () => {
                         <strong>Country:</strong> {user.country}
                       </p>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center mb-5">
+                    <div className="d-md-flex justify-content-between align-items-center mb-5">
                       <p className="fs-5 p-2 px-5">
                         <strong>City:</strong> {user.city}
                       </p>
@@ -242,8 +245,8 @@ const MyProfile = () => {
                         <strong>Address:</strong> {user.address}
                       </p>
                     </div>
-                    <div className="d-flex justify-content-end">
-                      <div className="d-flex justify-content-center align-items-center mt-2">
+                    <div className="d-md-flex justify-content-center">
+                      <div className="d-md-flex justify-content-center align-items-center mt-2">
                         <p className=" px-5">
                           <strong>Created At:</strong>{" "}
                           {new Date(user.createdAt).toLocaleString()}
@@ -253,14 +256,15 @@ const MyProfile = () => {
                           {new Date(user.updatedAt).toLocaleString()}
                         </p>
                       </div>
-                      <div>
-                        <button
-                          className="btn btn-primary"
-                          onClick={handleEdit}
-                        >
-                          Edit Profile
-                        </button>
-                      </div>
+                    </div>
+                    <div className="text-center my-3">
+                      <button
+                        className="btn"
+                        style={{ backgroundColor: "orangered", color: "white" }}
+                        onClick={handleEdit}
+                      >
+                        Edit Profile
+                      </button>
                     </div>
                   </div>
                 </>

@@ -94,6 +94,9 @@ const UserOverview = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["userOverview"],
     queryFn: fetchUserOverviewData,
+    staleTime: 0, 
+    refetchInterval: 5000,
+    keepPreviousData: true,
   });
 
   if (isLoading) return <p className="text-center mt-5">Loading...</p>;

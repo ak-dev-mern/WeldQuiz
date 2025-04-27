@@ -29,7 +29,7 @@
 }
 
 .about .about-image:hover .main-name-lable {
-  width: 460px;
+  width: 100%;
   opacity: 1;
 }
 
@@ -38,51 +38,80 @@
   justify-content: space-around;
   align-items: center;
   width: 100%;
+  margin: 10px 0;
 }
-
-.about .employee-img div {
-  width: 330px;
+.about .employee-img .single-image {
+  width: 300px;
   height: 300px;
   position: relative;
+  overflow: hidden;
+  border: 20px solid #fff;
+  padding: 0 !important;
 }
 
-.about .employee-img div .name-lable {
+.about .employee-img .single-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Name label hidden initially */
+.about .employee-img .name-lable {
   position: absolute;
-  top: 230px;
-  left: 15px;
+  bottom: 0;
+  left: 0;
   background-color: orangered;
-  width: 0;
-  height: 70px;
   color: #fff;
   padding: 10px;
-  opacity: 0;
-  overflow: hidden;
+  width: 0;
+  height: 70px;
   white-space: nowrap;
+  opacity: 0;
   transition: width 0.5s ease-in-out, opacity 0.3s ease-in-out;
 }
 
-.about .employee-img div:hover .name-lable {
-  width: 300px;
+/* Expand on hover */
+.about .employee-img .single-image:hover .name-lable {
+  width: 100%;
   opacity: 1;
 }
 
-.about .employee-img img {
-  border: 10px solid #fff;
-  object-fit: fill;
-}
-
-.social-media-link {
-  position: absolute;
-  top: -45px;
-  left: 140px;
-  width: 100%;
-}
-
-.social-media-link a {
+.social-media-link a i {
   color: #fff;
   transition: color 0.3s ease-in-out;
 }
 
 .social-media-link a i:hover {
   color: #ccc;
+}
+
+/* ============================
+   Responsive: Medium Devices 
+   ============================ */
+
+@media (max-width: 1024px) {
+  .about .about-image {
+    width: auto;
+    height: auto;
+    border-radius: 50%;
+    border: 20px solid #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about .employee-img {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    gap: 20px;
+  }
+
+  .main-name-lable h4,
+  .main-name-lable span {
+    font-size: 16px;
+  }
+  .main-name-lable .main-social-media-link a i {
+    font-size: 14px !important;
+  }
 }

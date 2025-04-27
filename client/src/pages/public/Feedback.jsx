@@ -8,6 +8,7 @@ import { FaStar, FaRegStar } from "react-icons/fa";
 import axios from "axios";
 import { getRole, getToken, getUsername } from "../../auth/auth.js";
 import "../../style/Feedback.css";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -32,6 +33,8 @@ const Feedback = () => {
   const token = getToken();
   const userName = getUsername();
   const userRole = getRole();
+  const [showModal, setShowModal] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState(null);
 
   const {
     data: allFeedbacks = [],
@@ -101,6 +104,18 @@ const Feedback = () => {
 
     setErrorMessage("");
     mutation.mutate({ rating, feedback });
+  };
+
+  const handleDeleteFeedback = (feedbackId) => {
+    setFeedbackToDelete(feedbackId);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (feedbackToDelete) {
+      deleteMutation.mutate(feedbackToDelete);
+      setShowModal(false);
+    }
   };
 
   const isLoggedIn = !!token;
@@ -199,7 +214,7 @@ const Feedback = () => {
                                 {(userRole === "admin" ||
                                   userName === fb.username) && (
                                   <button
-                                    onClick={() => deleteMutation.mutate(fb.id)}
+                                    onClick={() => handleDeleteFeedback(fb.id)}
                                     className="btn btn-link text-danger"
                                   >
                                     <div className="trash-btn">
@@ -218,6 +233,13 @@ const Feedback = () => {
                       <p>No feedback yet.</p>
                     </div>
                   )}
+                  <DeleteConfirmModal
+                    show={showModal}
+                    onHide={() => setShowModal(false)}
+                    onConfirm={confirmDelete}
+                    title="Delete Feedback?"
+                    message="Are you sure you want to delete this feedback? This action cannot be undone."
+                  />
                 </div>
 
                 {/* Pagination UI */}

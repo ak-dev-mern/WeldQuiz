@@ -15,4 +15,12 @@
   resize: none;
 }
 
+/* ============================
+   Responsive: Small Devices 
+   ============================ */
 
+@media (max-width: 600px) {
+  .contact-form-container{
+    padding: 5px !important;
+  }
+}

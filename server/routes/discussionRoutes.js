@@ -292,7 +292,6 @@ router.get("/getmessages", async (req, res) => {
   }
 });
 
-
 // DELETE: Delete message
 router.delete(
   "/deletemessage/:discussionId/:messageId",
@@ -430,7 +429,7 @@ router.delete("/mydiscussions/:id", authMiddleware, async (req, res) => {
   try {
     // Find the discussion by ID and ensure it belongs to the logged-in user
     const discussion = await Discussion.findOne({
-      where: { id, created_by: userId },
+      where: { discussion_id: id, created_by: userId },
     });
 
     if (!discussion) {

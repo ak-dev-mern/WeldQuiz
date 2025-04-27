@@ -3,6 +3,7 @@ import axios from "axios";
 import { getToken } from "../auth/auth";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,6 +12,8 @@ const MyDiscussion = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15); // ✅ Dynamic limit
   const queryClient = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [discussionToDelete, setDiscussionToDelete] = useState(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["mydiscussions", page, limit],
@@ -53,11 +56,20 @@ const MyDiscussion = () => {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this discussion?")) {
-      deleteDiscussionMutation.mutate(id, {
-        onSuccess: () => alert("Discussion deleted successfully."),
-        onError: (error) =>
-          alert(error.response?.data?.message || "Failed to delete."),
+    setDiscussionToDelete(id);
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (discussionToDelete) {
+      deleteDiscussionMutation.mutate(discussionToDelete, {
+        onSuccess: () => {
+          setShowModal(false);
+        },
+        onError: (error) => {
+          alert(error.response?.data?.message || "Failed to delete.");
+          setShowModal(false);
+        },
       });
     }
   };
@@ -103,7 +115,7 @@ const MyDiscussion = () => {
                 No discussions available.
               </div>
             ) : (
-              <div className="row px-5">
+              <div className="row px-md-5">
                 {data?.discussions?.map((d) => (
                   <div key={d.discussion_id} className="col-md-4 mb-4">
                     <div className="card text-center border-0 h-100 shadow-sm">
@@ -136,6 +148,14 @@ const MyDiscussion = () => {
                 ))}
               </div>
             )}
+
+            <DeleteConfirmModal
+              show={showModal}
+              onHide={() => setShowModal(false)}
+              onConfirm={confirmDelete}
+              title="Delete Discussion?"
+              message="Are you sure you want to delete this discussion? This action cannot be undone."
+            />
 
             {/* Pagination */}
             <div className="d-flex justify-content-center mt-4">

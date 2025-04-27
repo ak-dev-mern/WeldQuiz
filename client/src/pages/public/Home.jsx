@@ -82,7 +82,7 @@ const Home = () => {
             <h1 className="display-4 mb-5 text-light">
               Special features that make our online courses the best
             </h1>
-            <div className="row g-4">
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-4 g-5">
               {[
                 {
                   img: bulb,
@@ -105,20 +105,21 @@ const Home = () => {
                   text: "Learn anytime & anywhere from trusted mentors.",
                 },
               ].map((feature, index) => (
-                <div key={index} className="col-md-3">
-                  <div className="card p-4 shadow">
-                    <div className="card-top-image">
+                <div key={index} className="col">
+                  <div className="card p-4 shadow h-100 text-center">
+                    <div className="card-top-image mb-3">
                       <img
                         src={feature.img}
                         alt={feature.title}
                         className="img-fluid"
+                        style={{ maxHeight: "100px", objectFit: "contain" }}
                       />
                     </div>
-                    <div className="card-header border-0">
-                      <h4>{feature.title}</h4>
+                    <div className="card-header border-0 bg-white">
+                      <h4 className="fw-bold">{feature.title}</h4>
                     </div>
                     <div className="card-body">
-                      <p>{feature.text}</p>
+                      <p className="text-muted">{feature.text}</p>
                     </div>
                   </div>
                 </div>
@@ -169,7 +170,7 @@ const Home = () => {
         <section className="experience py-5 d-flex justify-content-center align-items-center">
           <div className="container text-light">
             <div className="row align-items-center">
-              <div className="col-md-6">
+              <div className="col-md-6 content">
                 <h1 className="display-4 fw-bold my-3">
                   Share your knowledge & experience with others
                 </h1>
