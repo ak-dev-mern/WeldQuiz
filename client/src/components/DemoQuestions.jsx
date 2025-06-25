@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { getToken } from "../auth/auth";
 import { Modal } from "react-bootstrap";
-import "../style/DemoQuestions.css";
+import "../style/Demoquestions.css";
 import { useMemo } from "react";
 
 const DemoQuestions = () => {
