@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setStudent } from "../../features/studentSlice";
 import { Link, useNavigate } from "react-router-dom";
 import "../../style/LoginPage.css";
-import orangeWave from "../../assets/images/shape.png";
+import orangeWave from "../../assets/images/Shape.png";
 import logo from "../../assets/images/book-logo.png";
 import Cookies from "js-cookie";
 
