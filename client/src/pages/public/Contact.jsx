@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar";
 import chat from "../../assets/images/chat.svg";
 import call from "../../assets/images/call.svg";
 import email from "../../assets/images/email.svg";
-import "../../style/contact.css";
+import "../../style/Contact.css";
 import Poster from "../../components/Poster";
 import Header from "../../components/Header";
 import ContactForm from "../../components/ContactForm";
