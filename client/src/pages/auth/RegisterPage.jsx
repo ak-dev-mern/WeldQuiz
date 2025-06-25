@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import "../../style/RegisterPage.css";
-import orangeWave from "../../assets/images/shape.png";
+import orangeWave from "../../assets/images/Shape.png";
 import logo from "../../assets/images/book-logo.png";
 
 const RegisterPage = () => {
