@@ -26,10 +26,17 @@ const Plan = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    features: {
-      type: DataTypes.JSON,
-      allowNull: true,
-    },
+features: {
+  type: DataTypes.TEXT,
+  allowNull: true,
+  get() {
+    const raw = this.getDataValue("features");
+    return raw ? JSON.parse(raw) : null;
+  },
+  set(value) {
+    this.setDataValue("features", JSON.stringify(value));
+  },
+},
     created_at: {
       type: DataTypes.DATE,
       allowNull: true,
