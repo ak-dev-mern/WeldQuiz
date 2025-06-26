@@ -19,11 +19,13 @@ const Discussion = () => {
   const [newDiscussion, setNewDiscussion] = useState({
     title: "",
     description: "",
+    image: null,
   });
   const [editingDiscussionId, setEditingDiscussionId] = useState(null);
   const [editDiscussionData, setEditDiscussionData] = useState({
     title: "",
     description: "",
+    image: null, // ✅ include image in edit state
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -33,7 +35,6 @@ const Discussion = () => {
   const userName = getUsername();
   const userRole = getRole();
 
-  // Fetch paginated discussions from backend
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["discussions", page],
     queryFn: async () => {
@@ -49,40 +50,56 @@ const Discussion = () => {
   const discussions = data?.discussions || [];
   const totalPages = data?.pagination?.pages || 1;
 
-  // Create new discussion
   const {
     mutate: createDiscussion,
     isLoading: isCreating,
     error: createError,
   } = useMutation({
     mutationFn: async (discussionData) => {
+      const formData = new FormData();
+      formData.append("title", discussionData.title);
+      formData.append("description", discussionData.description);
+      if (discussionData.image) {
+        formData.append("image", discussionData.image);
+      }
+
       const response = await axios.post(
         `${API_URL}/api/discussions/createnewdiscussion`,
-        discussionData,
+        formData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["discussions"]);
-      setNewDiscussion({ title: "", description: "" });
-      setPage(1); // Go to first page to show latest
+      setNewDiscussion({ title: "", description: "", image: "" });
+      setPage(1);
     },
   });
 
-  // Update discussion
+  // ✅ update mutation to send FormData
   const { mutate: updateDiscussion, isLoading: isUpdatingDiscussion } =
     useMutation({
-      mutationFn: async ({ discussionId, title, description }) => {
+      mutationFn: async ({ discussionId, title, description, image }) => {
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        if (image) {
+          formData.append("image", image);
+        }
+
         const response = await axios.put(
           `${API_URL}/api/discussions/${discussionId}`,
-          { title, description },
+          formData,
           {
             headers: {
-              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
             },
           }
         );
@@ -94,7 +111,6 @@ const Discussion = () => {
       },
     });
 
-  // Delete discussion
   const { mutate: deleteDiscussion } = useMutation({
     mutationFn: async (discussionId) => {
       const response = await axios.delete(
@@ -136,6 +152,7 @@ const Discussion = () => {
     setEditDiscussionData({
       title: discussion.title,
       description: discussion.description || "",
+      image: null, // ✅ reset image for optional change
     });
   };
 
@@ -145,12 +162,13 @@ const Discussion = () => {
       discussionId,
       title: editDiscussionData.title,
       description: editDiscussionData.description,
+      image: editDiscussionData.image,
     });
   };
 
   const handleCancelEdit = () => {
     setEditingDiscussionId(null);
-    setEditDiscussionData({ title: "", description: "" });
+    setEditDiscussionData({ title: "", description: "", image: null });
   };
 
   const handlePageChange = (newPage) => {
@@ -200,6 +218,20 @@ const Discussion = () => {
               }
               maxLength={500}
             />
+            <input
+              className="form-control mb-3"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setNewDiscussion({ ...newDiscussion, image: e.target.files[0] })
+              }
+            />
+            <div className="mb-3">
+              <small className="text-danger">
+                {" "}
+                *Max upload file size 5 MB and accepted only (.jpg and .jpeg)
+              </small>
+            </div>
             <button
               type="submit"
               className="submit-btn"
@@ -245,20 +277,18 @@ const Discussion = () => {
               <div key={discussion.discussion_id} className="discussion-card">
                 <div className="discussion-header">
                   {editingDiscussionId === discussion.discussion_id ? (
-                    <>
-                      <input
-                        className="form-control mb-2"
-                        type="text"
-                        value={editDiscussionData.title}
-                        onChange={(e) =>
-                          setEditDiscussionData({
-                            ...editDiscussionData,
-                            title: e.target.value,
-                          })
-                        }
-                        maxLength={100}
-                      />
-                    </>
+                    <input
+                      className="form-control mb-2"
+                      type="text"
+                      value={editDiscussionData.title}
+                      onChange={(e) =>
+                        setEditDiscussionData({
+                          ...editDiscussionData,
+                          title: e.target.value,
+                        })
+                      }
+                      maxLength={100}
+                    />
                   ) : (
                     <Link
                       className="nav-link"
@@ -273,21 +303,63 @@ const Discussion = () => {
                 </div>
 
                 {editingDiscussionId === discussion.discussion_id ? (
-                  <textarea
-                    className="form-control mb-2"
-                    value={editDiscussionData.description}
-                    onChange={(e) =>
-                      setEditDiscussionData({
-                        ...editDiscussionData,
-                        description: e.target.value,
-                      })
-                    }
-                    maxLength={500}
-                  />
+                  <>
+                    {/* Description editing */}
+                    <label className="form-label">Edit Description</label>
+                    <textarea
+                      className="form-control mb-3"
+                      value={editDiscussionData.description}
+                      onChange={(e) =>
+                        setEditDiscussionData({
+                          ...editDiscussionData,
+                          description: e.target.value,
+                        })
+                      }
+                      maxLength={500}
+                      rows={4}
+                    />
+
+                    {/* Image editing */}
+                    <label className="form-label">Change Image</label>
+                    <input
+                      className="form-control mb-3"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setEditDiscussionData({
+                          ...editDiscussionData,
+                          image: e.target.files[0],
+                        })
+                      }
+                    />
+                    <div className="mb-3">
+                      <small className="text-danger">
+                        {" "}
+                        *Max upload file size 5 MB and accepted only (.jpg and
+                        .jpeg)
+                      </small>
+                    </div>
+
+                    {/* Existing image preview (optional) */}
+                    {discussion.image && (
+                      <div className="mt-2">
+                        <p>Current Image:</p>
+                        <img
+                          src={`${API_URL}/uploads/${discussion.image}`}
+                          alt="Discussion"
+                          className="img-fluid rounded mt-1"
+                          style={{ height: "100px" }}
+                        />
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  discussion.description && (
-                    <p>{textLengthLimit(discussion.description, 200)}</p>
-                  )
+                  <>
+                    {/* Normal view mode */}
+                    {discussion.description && (
+                      <p>{textLengthLimit(discussion.description, 200)}</p>
+                    )}
+                  </>
                 )}
 
                 <div className="discussion-meta">
@@ -353,7 +425,6 @@ const Discussion = () => {
             message="Are you sure you want to delete this discussion? This action cannot be undone."
           />
 
-          {/* Bottom pagination controls */}
           {totalPages > 1 && (
             <div className="pagination-controls bottom">
               <button

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { getToken } from "../auth/auth";
 import { Modal } from "react-bootstrap";
-import "../style/DemoQuestions.css";
+import "../style/Demoquestions.css";
 import { useMemo } from "react";
 
 const DemoQuestions = () => {
@@ -135,7 +135,7 @@ const DemoQuestions = () => {
               <div className="p-3 text-center quiz-guidelines">
                 <h1>Quiz Guidelines</h1>
                 <h4>Description</h4>
-                <ul className="p-0">
+                <ul className="p-0 list-unstyled">
                   <li>
                     This quiz contains multiple-choice questions from different
                     categories related to welding and quality control.

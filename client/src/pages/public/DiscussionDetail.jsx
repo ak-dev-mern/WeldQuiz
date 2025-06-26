@@ -188,6 +188,19 @@ const DiscussionDetail = () => {
             </div>
           )}
 
+          <div>
+            {discussion?.image && (
+              <div className="mt-2">
+                <img
+                  src={`${API_URL}/uploads/${discussion.image}`}
+                  alt="Discussion"
+                  className="img-fluid rounded"
+                  style={{ height: "auto", width: "auto" }}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="messages-section">
             <h3>
               Messages (

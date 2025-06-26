@@ -275,7 +275,7 @@ const LoginPage = () => {
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="link-dark text-decoration-none"
+              className="link-danger"
               aria-disabled={loginMutation.isLoading}
             >
               Register here

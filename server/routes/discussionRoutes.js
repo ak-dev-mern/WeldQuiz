@@ -8,13 +8,51 @@ import {
   messageValidators,
 } from "../validators/discussionValidators.js";
 import { Sequelize } from "sequelize";
+import multer from "multer";
+import { fileURLToPath } from "url";
+import path, { dirname, join } from "path";
+import fs from "fs";
 
 const router = express.Router();
 
+// Resolve the current directory path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Set up multer for file uploads with validation
+const uploadPath = join(__dirname, "../uploads");
+
+// Multer config for optional image upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadPath); // Absolute path
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = file.originalname.split(".").pop();
+    cb(null, `${file.fieldname}-${uniqueSuffix}.${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/jpg"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only .jpg and .jpeg images are allowed"));
+    }
+  },
+});
 // POST: Create a new discussion
 router.post(
   "/createnewdiscussion",
-  authMiddleware, // This ensures the user is authenticated
+  authMiddleware,
+  upload.single("image"), // Accept optional image
   discussionValidators.createDiscussion,
   async (req, res) => {
     const errors = validationResult(req);
@@ -24,18 +62,19 @@ router.post(
 
     const { title, description } = req.body;
 
-    // Check if req.user and req.user.id are properly set
     if (!req.user?.id) {
       return res.status(400).json({ error: "User ID is missing" });
     }
 
     try {
-      // Create a new discussion, using the user ID and username from the authentication token
+      const imagePath = req.file ? `/${req.file.filename}` : null;
+
       const newDiscussion = await Discussion.create({
         title,
         description,
-        created_by: req.user.id, // Use the user's ID
-        created_name: req.user.username, // Use the user's username for created_name
+        image: imagePath,
+        created_by: req.user.id,
+        created_name: req.user.username,
       });
 
       return res.status(201).json({
@@ -127,30 +166,45 @@ router.get("/getdiscussions/:id", async (req, res) => {
 });
 
 // PUT: Update discussion details
-router.put("/:id", authMiddleware, async (req, res) => {
+router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
-    const userId = req.user.id; // From authentication middleware
+    const userId = req.user.id;
 
-    // Find the discussion
     const discussion = await Discussion.findByPk(id);
     if (!discussion) {
       return res.status(404).json({ error: "Discussion not found" });
     }
 
-    // Check if user is admin or the creator
     if (req.user.role !== "admin" && discussion.created_by !== userId) {
       return res.status(403).json({ error: "Not authorized" });
     }
 
-    // Update the discussion
-    const updatedDiscussion = await discussion.update({
+    const updatedFields = {
       title,
       description: description || null,
-    });
+    };
 
-    res.json(updatedDiscussion);
+    if (req.file) {
+      updatedFields.image = req.file.filename;
+    }
+
+    const updatedDiscussion = await discussion.update(updatedFields);
+
+    const updatedDiscussionWithImageUrl = {
+      ...updatedDiscussion.toJSON(),
+      imageUrl: updatedDiscussion.image
+        ? `${req.protocol}://${req.get("host")}/uploads/${
+            updatedDiscussion.image
+          }`
+        : null,
+    };
+
+    res.status(200).json({
+      message: "Discussion Updated Successfully!",
+      discussion: updatedDiscussionWithImageUrl,
+    });
   } catch (error) {
     console.error("Error updating discussion:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -175,6 +229,19 @@ router.delete("/deletediscussions/:id", authMiddleware, async (req, res) => {
         success: false,
         error: "Unauthorized to delete this discussion",
       });
+    }
+
+    // Delete associated image file if it exists
+    if (discussion.image) {
+      const imagePath = path.join(uploadPath, discussion.image);
+      try {
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (err) {
+        console.error("Failed to delete image file:", err.message);
+        // Optional: continue even if file deletion fails
+      }
     }
 
     await discussion.destroy();

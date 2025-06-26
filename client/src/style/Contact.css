@@ -4,7 +4,7 @@
 .contact .card {
   transition: 0.3s ease;
 }
-.contact .card .card-header h3 {
+.contact .card .card-header h4 {
   color: orangered !important;
 }
 .contact .card:hover {

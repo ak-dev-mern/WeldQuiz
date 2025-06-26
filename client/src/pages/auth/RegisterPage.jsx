@@ -214,6 +214,7 @@ const RegisterPage = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                   <span
                     className="input-group-text"
@@ -248,6 +249,7 @@ const RegisterPage = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                   <span
                     className="input-group-text"
@@ -356,9 +358,9 @@ const RegisterPage = () => {
             </label>
           </div>
 
-          <div className="d-flex justify-content-center">
+          <div className="d-flex justify-content-center my-3">
             <button
-              className="btn btn-primary w-50 shadow"
+              className="btn btn-primary w-50 shadow btn-register"
               type="submit"
               disabled={registerMutation.isLoading}
             >
@@ -375,6 +377,7 @@ const RegisterPage = () => {
         <p className="fw-bold  text-center">
           <Link to="/" className="link-light">
             <button className="btn btn-light text-danger fw-bold">
+              <i className="bi bi-house-door me-2"></i>
               Go to Home
             </button>
           </Link>

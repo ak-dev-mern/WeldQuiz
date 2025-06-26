@@ -98,8 +98,8 @@ const ContactForm = () => {
                 <img src={profile} alt="profile" />
               </div>
               <div>
-                <h6 className="m-0">John Doe</h6>
-                <span>CEO & Co-founder @ Company</span>
+                <h6 className="m-0">Weld Quiz</h6>
+                <span>CEO & Co-founder @ weldQuiz</span>
               </div>
             </div>
           </div>

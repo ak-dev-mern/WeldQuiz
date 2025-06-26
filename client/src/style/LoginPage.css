@@ -162,28 +162,33 @@
    ============================ */
 @media (max-width: 600px) {
   .login {
+    width: 100% !important;
+    height: 100%;
     background: var(--bg-color);
   }
   .login-form-container {
     width: 100%;
     height: auto;
-    left: -15px;
+    left: 0px;
+
   }
 
   .login-form-container form {
-    width: 100vw !important;
-    margin-left: 0px;
+    width: 100% !important;
+    margin-left: 0px !important;
+    height: 100% !important;
+    padding: 0px 20px !important;
   }
 
   .login-form-container h1 {
-    width: 100vw;
     margin-left: 15px;
+    margin-bottom: 0;
   }
 
-  .login-form-container form input,
+  /* .login-form-container form input,
   .login-form-container form .input-group {
     width: 100%;
-  }
+  } */
 
   .login img {
     width: 100%;
@@ -195,8 +200,6 @@
 
   .login-card {
     width: 100vw;
-    margin-top: 550px;
-    height: auto;
     left: 0;
     background-color: white !important;
   }
@@ -208,6 +211,7 @@
   .login-card p {
     margin: 10px !important;
     text-align: center !important;
+    padding: 5px !important;
   }
   .login-card a img {
     display: none !important;

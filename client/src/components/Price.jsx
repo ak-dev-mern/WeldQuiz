@@ -5,6 +5,7 @@ import axios from "axios";
 import { getRole, isAuthenticated, getToken } from "../auth/auth";
 import { loadStripe } from "@stripe/stripe-js";
 import "../style/PriceDetails.css";
+import offer from "../../public/offer.png";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 const API_URL = import.meta.env.VITE_API_URL;
@@ -77,6 +78,9 @@ const Price = () => {
 
         <div className="container my-md-5 mb-5">
           <div className="row cards g-4 justify-content-center">
+            <div className="offer-img">
+              <img src={offer} alt="offer.png" />
+            </div>
             {plans.map((plan) => (
               <div
                 className="col-12 col-sm-6 col-md-4 col-lg-3"
@@ -86,13 +90,19 @@ const Price = () => {
                   <div className="card-header">
                     <h4 className="fw-bold">{plan.plan_name} Plan</h4>
                     <div className="d-flex justify-content-center align-items-end">
-                      <p className="mb-0">Rs.</p>
+                      <p className="mb-0">$</p>
                       <h1 className="display-5 fw-bold mb-0 mx-1">
                         {plan.price}
                       </h1>
                       <p className="mb-1">/yearly</p>
                     </div>
                     <p className="text-muted">{plan.description}</p>
+                    <p
+                      className="text-secondary"
+                      style={{ fontSize: "0.9rem" }}
+                    >
+                      All prices are in <strong>USD</strong>
+                    </p>
                   </div>
                   <div className="card-body d-flex flex-column justify-content-between">
                     {plan.features?.length > 0 ? (
@@ -106,17 +116,30 @@ const Price = () => {
                       <h6 className="text-muted">No features listed</h6>
                     )}
 
-                    <button
-                      className="btn btn-primary w-100 mt-4 rounded-pill"
-                      onClick={() => handlePurchaseClick(plan)}
-                      disabled={loadingPlanId === plan.plan_id}
-                    >
-                      {loadingPlanId === plan.plan_id
-                        ? "Redirecting..."
-                        : isAuthenticated()
-                        ? "Purchase Now"
-                        : "Sign Up to Purchase"}
-                    </button>
+                    {plan.price != 0 ? (
+                      <button
+                        className="btn btn-primary w-100 mt-4 rounded-pill"
+                        onClick={() => handlePurchaseClick(plan)}
+                        disabled={loadingPlanId === plan.plan_id}
+                      >
+                        {loadingPlanId === plan.plan_id
+                          ? "Redirecting..."
+                          : isAuthenticated()
+                          ? "Purchase Now"
+                          : "Sign Up to Purchase"}
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary w-100 mt-4 rounded-pill"
+                        disabled
+                      >
+                        {loadingPlanId === plan.plan_id
+                          ? "Redirecting..."
+                          : isAuthenticated()
+                          ? "Free"
+                          : "Sign Up to Purchase"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

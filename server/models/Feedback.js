@@ -8,7 +8,7 @@ const Feedback = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Users", // This should match the table name for users
+        model: "users", // This should match the table name for users
         key: "id",
       },
       onDelete: "CASCADE", // Ensures feedback is deleted when user is deleted

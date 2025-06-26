@@ -74,7 +74,7 @@ const Question = sequelize.define(
     timestamps: true, // Automatically handles createdAt and updatedAt
     indexes: [
       { fields: ["category"] },
-      { fields: ["question"] },
+      { fields: [{ name: "question", length: 191 }] },
       { fields: ["createdAt"] }, // Useful for sorting new questions
     ],
     tableName: "questions",

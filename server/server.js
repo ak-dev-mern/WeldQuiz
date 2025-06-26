@@ -16,6 +16,7 @@ import { fileURLToPath } from "url";
 dotenv.config();
 const app = express();
 const port = Number(process.env.SERVER_PORT) || 5000;
+const host = process.env.DB_HOST;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +43,7 @@ db.sequelize
   .then(() => {
     console.log("✅ Database synced successfully.");
     app.listen(port, () => {
-      console.log(`🚀 Server is running on http://localhost:${port}`);
+      console.log(`🚀 Server is running on ${host}:${port}`);
     });
   })
   .catch((error) => {

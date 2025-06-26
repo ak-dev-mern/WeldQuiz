@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar";
 import chat from "../../assets/images/chat.svg";
 import call from "../../assets/images/call.svg";
 import email from "../../assets/images/email.svg";
-import "../../style/contact.css";
+import "../../style/Contact.css";
 import Poster from "../../components/Poster";
 import Header from "../../components/Header";
 import ContactForm from "../../components/ContactForm";
@@ -24,7 +24,7 @@ const Contact = () => {
               },
               {
                 img: call,
-                title: "Give us a call",
+                title: "Give us a call - (WhatsApp Only)",
                 text: "Call us at (+012-345-567-890) from 9 am to 5 pm.",
               },
               {
@@ -43,7 +43,7 @@ const Contact = () => {
                     />
                   </div>
                   <div className="card-header mt-3 border-0 bg-transparent">
-                    <h3>{contact.title}</h3>
+                    <h4>{contact.title}</h4>
                   </div>
                   <div className="card-body fs-5">
                     <p>{contact.text}</p>

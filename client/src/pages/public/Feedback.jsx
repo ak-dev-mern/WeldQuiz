@@ -10,7 +10,7 @@ import { getRole, getToken, getUsername } from "../../auth/auth.js";
 import "../../style/Feedback.css";
 import DeleteConfirmModal from "../../components/DeleteConfirmModal.jsx";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Fetch all feedbacks
 const fetchFeedbacks = async () => {

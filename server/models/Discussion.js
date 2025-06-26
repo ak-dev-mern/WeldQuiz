@@ -17,11 +17,15 @@ const Discussion = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    image: {
+      type: DataTypes.STRING, // Filename or file path
+      allowNull: true,
+    },
     created_by: {
       type: DataTypes.INTEGER, // No UNSIGNED to match Users.id if it's signed
       allowNull: false,
       references: {
-        model: "Users", // Make sure this matches your actual table/model name
+        model: "users", // Make sure this matches your actual table/model name
         key: "id",
       },
     },

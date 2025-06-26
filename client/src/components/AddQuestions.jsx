@@ -5,7 +5,7 @@ import { getToken } from "../auth/auth.js";
 import axios from "axios";
 import { useAppContext } from "../context/AppContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 const token = getToken();
 
 const AddQuestions = () => {

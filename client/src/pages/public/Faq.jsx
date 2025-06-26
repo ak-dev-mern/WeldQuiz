@@ -14,7 +14,7 @@ const Faq = () => {
 
       <div className="container-fluid">
         <div className="container faq">
-          <div className="accordion-container px-5">
+          <div className="accordion-container px-md-5">
             <div className="accordion" id="accordionExample">
               <h3 className="my-3 text-light">Frequently Asked Questions</h3>
               <div className="accordion-item">

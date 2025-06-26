@@ -18,9 +18,7 @@ const PrivacyPolicy = () => {
 
           <h2>1. Introduction</h2>
           <p>
-            Welcome to [Your Website Name], a platform dedicated to welding and
-            quality control (QC) questions and answers. By using our website,
-            you agree to comply with these Terms and Conditions.
+          Welcome to [Your Website Name]! This Privacy Policy explains how we collect, use, and protect your personal information when you visit our website, register for training programs, or take part in online exams.
           </p>
 
           <h2>2. Use of the Website</h2>

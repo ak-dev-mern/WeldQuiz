@@ -15,9 +15,6 @@ const Footer = () => {
               <i className="fab fa-facebook-f"></i>
             </a>
             <a href="" className="me-4 text-reset">
-              <i className="fab fa-google"></i>
-            </a>
-            <a href="" className="me-4 text-reset">
               <i className="fab fa-instagram"></i>
             </a>
             <a href="" className="me-4 text-reset">
@@ -117,10 +114,10 @@ const Footer = () => {
 
               <div className="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
                 <h6 className="text-uppercase fw-bold mb-4">Contact</h6>
-                <p>
+                {/* <p>
                   <i className="fas fa-home me-3" area-hidden="true"></i> New
                   York, NY 10012, US
-                </p>
+                </p> */}
                 <p>
                   <i className="fas fa-envelope me-3" area-hidden="true"></i>
                   weldquiz@gmail.com
@@ -129,10 +126,10 @@ const Footer = () => {
                   <i className="fas fa-phone me-3" area-hidden="true"></i> + 01
                   234 567 88
                 </p>
-                <p>
+                {/* <p>
                   <i className="fas fa-print me-3" area-hidden="true"></i> + 01
                   234 567 89
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -143,11 +140,11 @@ const Footer = () => {
           <div className="mt-2">
             Website designed by:{" "}
             <a
-              className="text-reset fw-bold"
+              className="text-reset fw-bold text-decoration-none"
               target="_blank"
               href="https://www.akeditz.com"
             >
-              Ak Editz
+              Ak Editz Design and Develop
             </a>
           </div>
         </div>

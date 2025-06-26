@@ -42,7 +42,8 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div>
+
+      <div className="home-container">
         {/* Hero Section */}
         <header className="text-light py-5 d-flex justify-content-center align-items-center">
           <div className="container">

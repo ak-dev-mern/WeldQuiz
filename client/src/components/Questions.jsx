@@ -7,7 +7,7 @@ import { format, isValid } from "date-fns";
 import { useAppContext } from "../context/AppContext";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const fetchQuestions = async () => {
   const token = getToken();
@@ -160,10 +160,10 @@ const Questions = () => {
     },
   });
 
-const handleDelete = (id) => {
-  setQuestionToDelete(id);
-  setShowModal(true);
-};
+  const handleDelete = (id) => {
+    setQuestionToDelete(id);
+    setShowModal(true);
+  };
 
   const confirmDelete = () => {
     if (questionToDelete) {
@@ -171,7 +171,6 @@ const handleDelete = (id) => {
       setShowModal(false);
     }
   };
-
 
   const handleEdit = (question) => {
     setEditingQuestionId(question.id);

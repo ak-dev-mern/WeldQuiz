@@ -1,5 +1,6 @@
 .price-details {
   height: 800px;
+  position: relative;
 }
 .price-details .cards .card {
   width: auto;
@@ -26,8 +27,12 @@
   margin-bottom: 25px !important;
   font-size: 18px;
 }
-.price-details .card .card-body .text-muted {
+.price-details .card .card-header .text-muted {
   color: #d6d6d6 !important;
+}
+
+.price-details .card:hover .card-header .text-muted {
+  color: #ffff !important;
 }
 
 .price-details .card button {
@@ -43,6 +48,46 @@
   color: #ffff !important;
 }
 
+.offer-img {
+  position: absolute;
+  width: 150px !important;
+  z-index: 1;
+  top: 150px !important;
+  left: 900px;
+}
+
+.offer-img img {
+  width: 100%;
+  animation: verticalShake 1s ease-in-out infinite;
+}
+
+@keyframes verticalShake {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-5px);
+  }
+  30% {
+    transform: translateY(5px);
+  }
+  45% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(4px);
+  }
+  75% {
+    transform: translateY(-2px);
+  }
+  90% {
+    transform: translateY(2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 /* ============================
    Responsive: Medium Devices 
    ============================ */
@@ -50,6 +95,20 @@
 @media (max-width: 1024px) {
   .price-details {
     height: auto;
+    width: 100%;
   }
 
+  .price-details .price-card {
+    padding: 0 !important;
+  }
+}
+
+@media (min-width: 380px) {
+  .offer-img {
+    position: absolute !important;
+    width: 110px !important;
+    z-index: 1;
+    top: 610px;
+    right: 10px;
+  }
 }

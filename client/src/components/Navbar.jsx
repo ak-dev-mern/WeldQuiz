@@ -136,7 +136,7 @@ const Navbar = () => {
   );
 
   const authButtons = !isAuthenticated && (
-    <>
+    <div className="auth-btn mt-md-0 mt-2 d-flex justify-content-center align-items-center">
       <li className="nav-item px-1">
         <button
           className="btn btn-outline-light px-4 py-1"
@@ -147,13 +147,13 @@ const Navbar = () => {
       </li>
       <li className="nav-item px-1">
         <button
-          className="btn btn-outline-light px-4 py-1"
+          className="btn btn-outline-light px-4 py-1 btn-login"
           onClick={() => navigate("/login")}
         >
           Login
         </button>
       </li>
-    </>
+    </div>
   );
 
   useEffect(() => {

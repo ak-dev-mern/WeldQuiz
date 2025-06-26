@@ -5,6 +5,7 @@ import Poster from "../../components/Poster";
 import about from "../../assets/images/about-img.jpg";
 import "../../style/About.css";
 import { Link } from "react-router-dom";
+import { Card } from "react-bootstrap";
 
 const About = () => {
   return (
@@ -14,7 +15,7 @@ const About = () => {
       <div className="container-fluid">
         <div className="container about">
           <div className="row d-flex justify-content-center align-items-center my-5">
-            <div className="col-md-6">
+            {/* <div className="col-md-6">
               <div className="about-image">
                 <img className="img-fluid" src={about} alt="about" />
                 <div className="main-name-lable d-flex flex-column justify-content-center align-items-center text-center">
@@ -35,31 +36,31 @@ const About = () => {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="col-md-6 mt-3">
-              <p className="fs-5">
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                Doloribus optio minus saepe, aliquam similique ipsa excepturi
-                quod est modi nobis et perferendis illum commodi veritatis,
-                cupiditate voluptatem quidem architecto! Accusantium! Lorem
-                ipsum dolor sit amet consectetur, adipisicing elit. Doloribus
-                optio minus saepe, aliquam similique ipsa excepturi quod est
-                modi nobis et perferendis illum commodi veritatis, cupiditate
-                voluptatem quidem architecto! Accusantium!
-              </p>
-              <p className="fs-5 fst-italic">
-                " Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                Doloribus optio minus saepe, aliquam similique ipsa excepturi
-                quod est modi nobis et perferendis illum commodi veritatis,
-                cupiditate voluptatem quidem architecto! Accusantium! Lorem
-                ipsum dolor sit amet consectetur, adipisicing elit. Doloribus
-                optio minus saepe, aliquam similique ipsa excepturi quod est
-                modi nobis et perferendis illum commodi veritatis, cupiditate
-                voluptatem quidem architecto! Accusantium!"
-              </p>
-            </div>
+            </div> */}
+            <Card style={{ maxWidth: "700px" }}>
+              <div className="col-md-6 mt-3 text-center w-100 p-md-5">
+                <p className="fs-5">
+                  With over a decade of experience in the field of Welding and
+                  Non-Destructive Testing (NDT), we bring a strong foundation of
+                  technical expertise and quality assurance to industrial
+                  projects across various sectors. Founded and led by a
+                  qualified Mechanical Engineer holding a Bachelor's degree (BE
+                  – Mechanical), our journey began with hands-on quality control
+                  (QC) inspection roles across diverse industries including
+                  power plants, pipelines, cement plants, refineries, and
+                  petrochemical facilities.
+                </p>
+                <p className="fs-5 fst-italic">
+                  "Our commitment to excellence, adherence to international
+                  standards, and deep understanding of inspection and welding
+                  procedures have made us a trusted name in the industry.
+                  Whether it's construction, maintenance, or shutdown projects,
+                  we deliver reliable solutions with precision and integrity."
+                </p>
+              </div>
+            </Card>
           </div>
-          <div className="row employee-img my-5">
+          {/* <div className="row employee-img my-5">
             <div className="single-image">
               <img className="img-fluid" src={about} alt="about" />
               <div className="name-lable d-flex justify-content-between align-items-center">
@@ -120,7 +121,7 @@ const About = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <Poster />

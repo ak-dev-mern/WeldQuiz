@@ -49,7 +49,7 @@ router.post("/create-checkout-session", authMiddleware, async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: "inr",
+            currency: "usd",
             product_data: { name: planName },
             unit_amount: unit_amount,
             recurring: { interval: "year" },
@@ -232,7 +232,6 @@ router.get("/subscription-status", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 router.get("/all-customers", async (req, res) => {
   try {
