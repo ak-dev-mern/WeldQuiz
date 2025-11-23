@@ -2,13 +2,13 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const API_BASE_URL =
-  import.meta.env.REACT_APP_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Request interceptor to add auth token
@@ -24,7 +24,6 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 
 // api.js - Update response interceptor
 api.interceptors.response.use(
@@ -49,7 +48,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Don't redirect if we're already on login page
-        if (!window.location.pathname.includes('/login')) {
+        if (!window.location.pathname.includes("/login")) {
           localStorage.removeItem("accessToken");
           window.location.href = "/login";
         }
@@ -59,7 +58,7 @@ api.interceptors.response.use(
 
     // Handle rate limiting - don't show toast for auth requests during logout
     if (error.response?.status === 429) {
-      const isAuthRequest = originalRequest.url.includes('/auth/');
+      const isAuthRequest = originalRequest.url.includes("/auth/");
       if (!isAuthRequest) {
         toast.error("Too many requests. Please slow down.");
       }
@@ -82,21 +81,28 @@ export const authAPI = {
   forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
   resetPassword: (data) => api.post("/auth/reset-password", data),
   refreshToken: () => api.post("/auth/refresh-token"),
+  uploadUserImage: (formData) =>
+    api.post("/auth/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }),
+  removeProfileImage: () => api.delete("/auth/profile/image"),
 };
 
-  export const coursesAPI = {
-    getCourses: (params) => api.get("/courses", { params }),
-    getCourse: (id) => api.get(`/courses/${id}`),
-    createCourse: (courseData) => api.post("/courses", courseData),
-    updateCourse: (id, courseData) => api.put(`/courses/${id}`, courseData),
-    deleteCourse: (id) => api.delete(`/courses/${id}`),
-    enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
-    getDemoQuestions: (courseId) =>
-      api.get(`/courses/${courseId}/demo-questions`),
-    rateCourse: (courseId, ratingData) =>
-      api.post(`/courses/${courseId}/rate`, ratingData),
-    getCourseRatings: (courseId) => api.get(`/courses/${courseId}/ratings`),
-  };
+export const coursesAPI = {
+  getCourses: (params) => api.get("/courses", { params }),
+  getCourse: (id) => api.get(`/courses/${id}`),
+  createCourse: (courseData) => api.post("/courses", courseData),
+  updateCourse: (id, courseData) => api.put(`/courses/${id}`, courseData),
+  deleteCourse: (id) => api.delete(`/courses/${id}`),
+  enrollCourse: (courseId) => api.post(`/courses/${courseId}/enroll`),
+  getDemoQuestions: (courseId) =>
+    api.get(`/courses/${courseId}/demo-questions`),
+  rateCourse: (courseId, ratingData) =>
+    api.post(`/courses/${courseId}/rate`, ratingData),
+  getCourseRatings: (courseId) => api.get(`/courses/${courseId}/ratings`),
+};
 
 export const examsAPI = {
   startExam: (courseId, unitId, isDemo = false) =>

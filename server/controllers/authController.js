@@ -503,6 +503,11 @@ export const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, bio, phone, location, website } = req.body;
 
+    console.log("Update profile request:", {
+      body: req.body,
+      user: req.user._id,
+    });
+
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
@@ -513,26 +518,34 @@ export const updateProfile = async (req, res) => {
 
     // Update profile fields
     user.profile = {
-      firstName: firstName || user.profile.firstName,
-      lastName: lastName || user.profile.lastName,
-      bio: bio !== undefined ? bio : user.profile.bio,
-      phone: phone !== undefined ? phone : user.profile.phone,
-      location: location !== undefined ? location : user.profile.location,
-      website: website !== undefined ? website : user.profile.website,
+      firstName: firstName || user.profile?.firstName || "",
+      lastName: lastName || user.profile?.lastName || "",
+      bio: bio !== undefined ? bio : user.profile?.bio || "",
+      phone: phone !== undefined ? phone : user.profile?.phone || "",
+      location:
+        location !== undefined ? location : user.profile?.location || "",
+      website: website !== undefined ? website : user.profile?.website || "",
+      avatar: user.profile?.avatar || null, // Keep existing avatar
     };
 
     await user.save();
 
+    // Get updated user
+    const updatedUser = await User.findById(req.user._id).select(
+      "-password -loginSessions -resetPasswordToken -resetPasswordExpires"
+    );
+
     res.json({
       success: true,
       message: "Profile updated successfully",
-      user: user.getPublicProfile(),
+      data: updatedUser,
     });
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({
       success: false,
       message: "Error updating profile",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -623,6 +636,75 @@ export const getSessionInfo = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching session info",
+    });
+  }
+};
+
+export const uploadUserImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No image uploaded" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    // Save full relative path
+    user.profile.avatar = `/uploads/users/${req.file.filename}`;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile image uploaded successfully",
+      data: user.getPublicProfile(),
+      imageUrl: user.profile.avatar,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error uploading image" });
+  }
+};
+
+// Remove profile image
+export const removeProfileImage = async (req, res) => {
+  try {
+    console.log("Remove profile image request:", {
+      user: req.user._id,
+    });
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Remove avatar from profile
+    user.profile.avatar = null;
+    await user.save();
+
+    // Get updated user
+    const updatedUser = await User.findById(req.user._id).select(
+      "-password -loginSessions -resetPasswordToken -resetPasswordExpires"
+    );
+
+    res.json({
+      success: true,
+      message: "Profile image removed successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Remove profile image error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error removing profile image",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Users, Target, Award, Globe, Heart, Rocket } from "lucide-react";
-import HomeHeader from "../../components/Layout/HomeHeader";
-import Footer from "../../components/Layout/Footer";
 
 const About = () => {
   const team = [
@@ -10,28 +8,28 @@ const About = () => {
       name: "Sarah Chen",
       role: "CEO & Founder",
       image:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&h=300&fit=crop&crop=faces",
       bio: "Former AI researcher at Google with passion for education technology.",
     },
     {
       name: "Marcus Rodriguez",
       role: "CTO",
       image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
       bio: "Full-stack developer with 10+ years experience in edtech platforms.",
     },
     {
       name: "Emily Watson",
       role: "Head of Education",
       image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=faces",
       bio: "Curriculum designer and former university professor.",
     },
     {
       name: "David Kim",
       role: "Product Lead",
       image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
       bio: "Product manager focused on creating exceptional learning experiences.",
     },
   ];

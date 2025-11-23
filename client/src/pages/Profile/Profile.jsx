@@ -36,13 +36,14 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("/default-avatar.png");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Fetch profile data with error handling
+  // Fetch profile data
   const {
     data: profileData,
     isLoading: profileLoading,
@@ -57,11 +58,14 @@ const Profile = () => {
       }
       return failureCount < 2;
     },
-    enabled: !!authUser && authUser.isAuthenticated, // Add this condition
+    enabled: !!authUser && authUser.isAuthenticated,
     staleTime: 5 * 60 * 1000,
   });
 
   const userProfile = profileData?.data?.data || authUser;
+
+  // Get current avatar - handle case where avatar might not exist
+  const currentAvatar = userProfile?.profile?.avatar || null;
 
   const {
     register: registerProfile,
@@ -94,27 +98,15 @@ const Profile = () => {
         location: userProfile?.profile?.location || "",
         website: userProfile?.profile?.website || "",
       });
-      setAvatarPreview(userProfile?.avatar || null);
-    }
-  }, [userProfile, resetProfile]);
 
-  // Handle authentication errors
-  useEffect(() => {
-    if (profileError?.response?.status === 401) {
-      console.log("Authentication failed, redirecting to login...");
-      logout();
-    }
-  }, [profileError, logout]);
-
-  // Profile.jsx - Add cleanup effect
-  useEffect(() => {
-    return () => {
-      // Cleanup when component unmounts
-      if (!authUser) {
-        queryClient.cancelQueries(["userProfile"]);
+      // Set avatar preview - handle case where avatar doesn't exist
+      if (currentAvatar) {
+        setAvatarPreview(`${import.meta.env.VITE_SOCKET_URL}${currentAvatar}`);
+      } else {
+        setAvatarPreview("/default-avatar.png");
       }
-    };
-  }, [authUser, queryClient]);
+    }
+  }, [userProfile, resetProfile, currentAvatar]);
 
   // Avatar handling
   const handleAvatarClick = () => {
@@ -123,76 +115,106 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select an image file");
-        return;
-      }
-
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeAvatar = () => {
-    setAvatarPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // Profile update mutation
+  // Profile update mutation (TEXT DATA ONLY)
   const updateProfileMutation = useMutation({
-    mutationFn: async (data) => {
-      const formData = new FormData();
-
-      // Append profile fields
-      Object.keys(data).forEach((key) => {
-        if (data[key]) {
-          formData.append(key, data[key]);
-        }
-      });
-
-      // Append avatar if changed
-      if (avatarPreview && avatarPreview !== userProfile?.avatar) {
-        if (avatarPreview.startsWith("data:")) {
-          // Convert data URL to blob
-          const response = await fetch(avatarPreview);
-          const blob = await response.blob();
-          formData.append("avatar", blob, "avatar.jpg");
-        }
-      } else if (avatarPreview === null && userProfile?.avatar) {
-        // Remove avatar
-        formData.append("removeAvatar", "true");
-      }
-
-      return authAPI.updateProfile(formData);
-    },
+    mutationFn: (data) => authAPI.updateProfile(data),
     onSuccess: (response) => {
+      console.log("Profile update successful:", response);
       toast.success("Profile updated successfully");
       setIsEditing(false);
-      updateUser(response.data); // Update auth context
+
+      // Safely update auth context
+      if (response.data && typeof updateUser === "function") {
+        updateUser(response.data);
+      }
+
+      // Always invalidate queries to refresh data
       queryClient.invalidateQueries(["userProfile"]);
     },
     onError: (error) => {
+      console.error("Profile update mutation error:", error);
+
+      // Check if it's an authentication error
       if (error.response?.status === 401) {
-        logout();
+        console.log("Authentication error - logging out");
+        toast.error("Session expired. Please log in again.");
+        if (typeof logout === "function") {
+          logout();
+        }
       } else {
-        toast.error(
-          error.response?.data?.message || "Failed to update profile"
-        );
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update profile";
+        console.log("Error message:", errorMessage);
+        toast.error(errorMessage);
+      }
+    },
+  });
+
+  // Upload profile image mutation
+  const uploadImageMutation = useMutation({
+    mutationFn: (formData) => authAPI.uploadUserImage(formData),
+    onSuccess: (response) => {
+      console.log("Image upload successful:", response);
+      toast.success("Profile image uploaded successfully");
+      setUploadingImage(false);
+
+      // Safely update auth context
+      if (response.data && typeof updateUser === "function") {
+        updateUser(response.data);
+      }
+
+      queryClient.invalidateQueries(["userProfile"]);
+    },
+    onError: (error) => {
+      console.error("Image upload mutation error:", error);
+      setUploadingImage(false);
+
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please log in again.");
+        if (typeof logout === "function") {
+          logout();
+        }
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to upload image";
+        toast.error(errorMessage);
+      }
+    },
+  });
+
+  // Remove profile image mutation
+  const removeImageMutation = useMutation({
+    mutationFn: () => authAPI.removeProfileImage(),
+    onSuccess: (response) => {
+      console.log("Image remove successful:", response);
+      toast.success("Profile image removed successfully");
+      setAvatarPreview("/default-avatar.png");
+
+      // Safely update auth context
+      if (response.data && typeof updateUser === "function") {
+        updateUser(response.data);
+      }
+
+      queryClient.invalidateQueries(["userProfile"]);
+    },
+    onError: (error) => {
+      console.error("Image remove mutation error:", error);
+
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please log in again.");
+        if (typeof logout === "function") {
+          logout();
+        }
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to remove image";
+        toast.error(errorMessage);
       }
     },
   });
@@ -208,7 +230,7 @@ const Profile = () => {
       setShowConfirmPassword(false);
     },
     onError: (error) => {
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 && typeof logout === "function") {
         logout();
       } else {
         toast.error(
@@ -218,8 +240,55 @@ const Profile = () => {
     },
   });
 
+  // Handle image upload separately
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file (JPEG, PNG, GIF)");
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      await uploadImageMutation.mutateAsync(formData);
+    } catch (error) {
+      console.error("Image upload error:", error);
+    }
+  };
+
+  const handleAvatarChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload the image automatically when selected
+      handleImageUpload(file);
+    }
+  };
+
+  const removeAvatar = () => {
+    removeImageMutation.mutate();
+  };
+
+  // Handle profile form submit (TEXT DATA ONLY)
   const onProfileSubmit = (data) => {
-    if (!isProfileDirty && avatarPreview === (userProfile?.avatar || null)) {
+    if (!isProfileDirty) {
       toast("No changes to save", { icon: "ℹ️" });
       return;
     }
@@ -232,14 +301,21 @@ const Profile = () => {
 
   const handleCancelEdit = () => {
     resetProfile({
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
-      bio: userProfile?.bio || "",
-      phone: userProfile?.phone || "",
-      location: userProfile?.location || "",
-      website: userProfile?.website || "",
+      firstName: userProfile?.profile?.firstName || "",
+      lastName: userProfile?.profile?.lastName || "",
+      bio: userProfile?.profile?.bio || "",
+      phone: userProfile?.profile?.phone || "",
+      location: userProfile?.profile?.location || "",
+      website: userProfile?.profile?.website || "",
     });
-    setAvatarPreview(userProfile?.avatar || null);
+
+    // Reset avatar preview
+    if (currentAvatar) {
+      setAvatarPreview(`${import.meta.env.VITE_SOCKET_URL}${currentAvatar}`);
+    } else {
+      setAvatarPreview("/default-avatar.png");
+    }
+
     setIsEditing(false);
   };
 
@@ -466,21 +542,23 @@ const Profile = () => {
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-6 sm:space-y-0 sm:space-x-6 mb-8">
                 <div className="relative group">
                   <img
-                    src={
-                      avatarPreview ||
-                      userProfile?.avatar ||
-                      "/default-avatar.png"
-                    }
+                    src={avatarPreview}
                     alt={userProfile?.username}
                     className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-dark-700 shadow-lg"
                   />
                   {isEditing && (
                     <>
                       <button
+                        type="button"
                         onClick={handleAvatarClick}
                         className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        disabled={uploadingImage}
                       >
-                        <Camera className="h-6 w-6 text-white" />
+                        {uploadingImage ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <Camera className="h-6 w-6 text-white" />
+                        )}
                       </button>
                       <input
                         ref={fileInputRef}
@@ -488,21 +566,30 @@ const Profile = () => {
                         accept="image/*"
                         onChange={handleAvatarChange}
                         className="hidden"
+                        disabled={uploadingImage}
                       />
-                      {avatarPreview && (
-                        <button
-                          onClick={removeAvatar}
-                          className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      )}
+                      {avatarPreview &&
+                        avatarPreview !== "/default-avatar.png" && (
+                          <button
+                            type="button"
+                            onClick={removeAvatar}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                            disabled={removeImageMutation.isLoading}
+                          >
+                            {removeImageMutation.isLoading ? (
+                              <LoadingSpinner size="xs" />
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </button>
+                        )}
                     </>
                   )}
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {userProfile?.firstName} {userProfile?.lastName}
+                    {userProfile?.profile?.firstName}{" "}
+                    {userProfile?.profile?.lastName}
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400 text-lg">
                     @{userProfile?.username}
@@ -521,9 +608,9 @@ const Profile = () => {
                         )
                       : "N/A"}
                   </p>
-                  {userProfile?.bio && (
+                  {userProfile?.profile?.bio && (
                     <p className="text-gray-600 dark:text-gray-400 mt-2 max-w-md">
-                      {userProfile.bio}
+                      {userProfile.profile.bio}
                     </p>
                   )}
                 </div>
@@ -708,6 +795,7 @@ const Profile = () => {
                       type="button"
                       onClick={handleCancelEdit}
                       className="btn btn-secondary order-2 sm:order-1"
+                      disabled={updateProfileMutation.isLoading}
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancel

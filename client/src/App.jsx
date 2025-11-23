@@ -107,11 +107,8 @@ function App() {
                     <Route path="pricing" element={<Pricing />} />
                     <Route path="about" element={<About />} />
                     <Route path="contact" element={<Contact />} />
-                    <Route path="public-courses" element={<PublicCourses />} />
-                    <Route
-                      path="public-courses/:id"
-                      element={<PublicCourseDetail />}
-                    />
+                    <Route path="courses" element={<PublicCourses />} />
+                    <Route path="courses/:id" element={<PublicCourseDetail />} />
                   </Route>
 
                   {/* Protected Routes with Dashboard Layout (No Footer) */}

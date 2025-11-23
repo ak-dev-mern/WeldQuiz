@@ -38,6 +38,11 @@ const Sidebar = ({ open, setOpen }) => {
     return location.pathname.startsWith(href);
   };
 
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return "/default-avatar.png";
+    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -73,36 +78,39 @@ const Sidebar = ({ open, setOpen }) => {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {/* Main Navigation */}
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+          {/* Show Main Navigation ONLY IF USER IS NOT ADMIN */}
+          {!isAdmin && (
+            <>
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setOpen(false)}
-                className={`
-                  flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                  ${
-                    active
-                      ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-500"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-700 dark:hover:text-gray-200"
-                  }
-                `}
-              >
-                <Icon
-                  className={`h-5 w-5 mr-3 ${
-                    active
-                      ? "text-primary-700 dark:text-primary-400"
-                      : "text-gray-400 dark:text-gray-500"
-                  }`}
-                />
-                {item.name}
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+              ${
+                active
+                  ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-500"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-700 dark:hover:text-gray-200"
+              }
+            `}
+                  >
+                    <Icon
+                      className={`h-5 w-5 mr-3 ${
+                        active
+                          ? "text-primary-700 dark:text-primary-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </>
+          )}
 
           {/* Admin Navigation */}
           {isAdmin && (
@@ -122,14 +130,13 @@ const Sidebar = ({ open, setOpen }) => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setOpen(false)}
-                    className={`
-                      flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                      ${
-                        active
-                          ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-500"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-700 dark:hover:text-gray-200"
-                      }
-                    `}
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+              ${
+                active
+                  ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-500"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-700 dark:hover:text-gray-200"
+              }
+            `}
                   >
                     <Icon
                       className={`h-5 w-5 mr-3 ${
@@ -150,7 +157,7 @@ const Sidebar = ({ open, setOpen }) => {
         <div className="flex-shrink-0 border-t border-gray-200 p-4 dark:border-dark-600">
           <Link to="profile" className="flex items-center space-x-3 group">
             <img
-              src={user?.profile?.avatar || "/default-avatar.png"}
+              src={getAvatarUrl(user?.profile?.avatar)}
               alt={user?.username}
               className="h-8 w-8 rounded-full"
             />

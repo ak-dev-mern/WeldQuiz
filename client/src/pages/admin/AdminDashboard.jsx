@@ -24,7 +24,7 @@ const AdminDashboard = () => {
   const dashboardStats = [
     {
       name: "Total Users",
-      value: stats?.stats?.totals?.users || 0,
+      value: stats?.data?.stats?.totals?.users || 0,
       icon: Users,
       change: "+12%",
       changeType: "increase",
@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Courses",
-      value: stats?.stats?.totals?.courses || 0,
+      value: stats?.data?.stats?.totals?.courses || 0,
       icon: BookOpen,
       change: "+5%",
       changeType: "increase",
@@ -40,7 +40,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Exams Taken",
-      value: stats?.stats?.totals?.exams || 0,
+      value: stats?.data?.stats?.totals?.exams || 0,
       icon: BarChart3,
       change: "+23%",
       changeType: "increase",
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Revenue",
-      value: `$${(stats?.stats?.totals?.revenue || 0).toLocaleString()}`,
+      value: `$${(stats?.data?.stats?.totals?.revenue || 0).toLocaleString()}`,
       icon: DollarSign,
       change: "+18%",
       changeType: "increase",

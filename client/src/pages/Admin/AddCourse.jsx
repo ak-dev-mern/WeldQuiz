@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff,
   Save,
+  AlertCircle,
 } from "lucide-react";
 import { coursesAPI } from "../../services/api";
 import LoadingSpinner from "../../components/UI/LoadingSpinner";
@@ -28,22 +29,40 @@ const AddCourse = () => {
   const queryClient = useQueryClient();
   const isEditing = !!courseId;
 
-  const [imagePreview, setImagePreview] = useState(null);
-  const [units, setUnits] = useState([
-    {
-      title: "",
-      description: "",
-      order: 1,
-      duration: 0,
-      lessons: [],
-      questions: [],
+  // Define mutation FIRST, before any other logic that uses it
+  const saveCourseMutation = useMutation({
+    mutationFn: (courseData) =>
+      isEditing
+        ? coursesAPI.updateCourse(courseId, courseData)
+        : coursesAPI.createCourse(courseData),
+    onSuccess: () => {
+      toast.success(
+        `Course ${isEditing ? "updated" : "created"} successfully!`
+      );
+      queryClient.invalidateQueries(["admin-courses"]);
+      queryClient.invalidateQueries(["course", courseId]);
+      navigate("/dashboard/admin/courses");
     },
-  ]);
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          `Failed to ${isEditing ? "update" : "create"} course`
+      );
+    },
+  });
+
+  // Now the rest of your state and hooks
+  const [imagePreview, setImagePreview] = useState(null);
+  const [units, setUnits] = useState([]);
   const [activeUnitIndex, setActiveUnitIndex] = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Fetch course data if editing
-  const { data: existingCourse, isLoading: courseLoading } = useQuery({
+  const {
+    data: existingCourse,
+    isLoading: courseLoading,
+    isError,
+  } = useQuery({
     queryKey: ["course", courseId],
     queryFn: () => coursesAPI.getCourse(courseId),
     enabled: isEditing,
@@ -64,10 +83,7 @@ const AddCourse = () => {
       shortDescription: "",
       category: "",
       subcategory: "",
-      price: {
-        monthly: 0,
-        yearly: 0,
-      },
+      price: { monthly: 0, yearly: 0 },
       level: "beginner",
       tags: "",
       requirements: [""],
@@ -78,33 +94,13 @@ const AddCourse = () => {
     },
   });
 
-  // Save course mutation for both create and update
-  const saveCourseMutation = useMutation({
-    mutationFn: (courseData) =>
-      isEditing
-        ? coursesAPI.updateCourse(courseId, courseData)
-        : coursesAPI.createCourse(courseData),
-    onSuccess: () => {
-      toast.success(
-        `Course ${isEditing ? "updated" : "created"} successfully!`
-      );
-      queryClient.invalidateQueries(["adminCourses"]);
-      queryClient.invalidateQueries(["course", courseId]);
-      navigate("/dashboard/admin/courses");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          `Failed to ${isEditing ? "update" : "create"} course`
-      );
-    },
-  });
-
-  // Pre-fill form if editing
+  // Simplified initialization - only run once when data is available
   useEffect(() => {
-    if (existingCourse && isEditing) {
-      const course = existingCourse.data || existingCourse;
+    if (isEditing && existingCourse?.course) {
+      const course = existingCourse.course;
+      
 
+      // Reset form with course data
       reset({
         title: course.title || "",
         description: course.description || "",
@@ -116,7 +112,9 @@ const AddCourse = () => {
           yearly: course.price?.yearly || 0,
         },
         level: course.level || "beginner",
-        tags: course.tags?.join(", ") || "",
+        tags: Array.isArray(course.tags)
+          ? course.tags.join(", ")
+          : course.tags || "",
         requirements:
           course.requirements?.length > 0 ? course.requirements : [""],
         learningOutcomes:
@@ -126,30 +124,69 @@ const AddCourse = () => {
         maxStudents: course.maxStudents || 0,
       });
 
-      // FIXED: removed extra parenthesis
-      setUnits(
-        course.units?.length > 0
-          ? course.units.map((unit) => ({
-              ...unit,
-              lessons: unit.lessons || [],
-              questions: unit.questions || [],
-            }))
-          : [
-              {
-                title: "",
-                description: "",
-                order: 1,
-                duration: 0,
-                lessons: [],
-                questions: [],
-              },
-            ]
-      );
+      // Set units
+      const courseUnits = course.units || [];
+      if (courseUnits.length > 0) {
+        setUnits(
+          courseUnits.map((unit, index) => ({
+            _id: unit._id,
+            title: unit.title || "",
+            description: unit.description || "",
+            order: unit.order || index + 1,
+            duration: unit.duration || 0,
+            lessons: (unit.lessons || []).map((lesson, lessonIndex) => ({
+              _id: lesson._id,
+              title: lesson.title || "",
+              content: lesson.content || "",
+              order: lesson.order || lessonIndex + 1,
+              duration: lesson.duration || 0,
+              videoUrl: lesson.videoUrl || "",
+              resources: lesson.resources || [],
+              isFree: lesson.isFree || false,
+            })),
+            questions: (unit.questions || []).map((question, qIndex) => ({
+              _id: question._id,
+              question: question.question || "",
+              questionType: question.questionType || "multiple_choice",
+              options: question.options || ["", "", "", ""],
+              correctAnswer: question.correctAnswer || 0,
+              explanation: question.explanation || "",
+              marks: question.marks || 1,
+              difficulty: question.difficulty || "medium",
+              timeLimit: question.timeLimit || 60,
+            })),
+          }))
+        );
+      } else {
+        setUnits([
+          {
+            title: "",
+            description: "",
+            order: 1,
+            duration: 0,
+            lessons: [],
+            questions: [],
+          },
+        ]);
+      }
 
-      setImagePreview(course.image || null);
-      setValue("image", course.image || "");
+      setImagePreview(course.image || course.thumbnail || null);
+    } else if (!isEditing) {
+      // For new course, ensure we have at least one unit
+      if (units.length === 0) {
+        setUnits([
+          {
+            title: "",
+            description: "",
+            order: 1,
+            duration: 0,
+            lessons: [],
+            questions: [],
+          },
+        ]);
+      }
     }
-  }, [existingCourse, isEditing, reset, setValue]);
+  }, [isEditing, existingCourse, reset]);
 
   // Handle image upload
   const handleImageChange = (event) => {
@@ -445,17 +482,49 @@ const AddCourse = () => {
       ),
     };
 
-    console.log("Submitting course data:", courseData);
+ 
     saveCourseMutation.mutate(courseData);
   };
 
-  const activeUnit = units[activeUnitIndex];
+  // Safe active unit with fallback
+  const activeUnit = units[activeUnitIndex] || {
+    title: "",
+    description: "",
+    order: activeUnitIndex + 1,
+    duration: 0,
+    lessons: [],
+    questions: [],
+  };
 
-  // Show loading while fetching course data for editing
+  // Show loading only when actually fetching data for editing
   if (isEditing && courseLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
+        <span className="ml-2">Loading course data...</span>
+      </div>
+    );
+  }
+
+  // Show error state if course fetch failed
+  if (isEditing && isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Failed to Load Course
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            There was an error loading the course data.
+          </p>
+          <button
+            onClick={() => navigate("/dashboard/admin/courses")}
+            className="btn btn-primary"
+          >
+            Back to Courses
+          </button>
+        </div>
       </div>
     );
   }

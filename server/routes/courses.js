@@ -9,7 +9,11 @@ import {
   getDemoQuestions,
   rateCourse,
 } from "../controllers/courseController.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import {
+  authenticate,
+  requireAdmin,
+  authenticateWithImage,
+} from "../middleware/auth.js";
 import { validateCourse } from "../middleware/validation.js";
 
 const router = express.Router();
@@ -24,6 +28,7 @@ router.post(
   "/",
   authenticate,
   requireAdmin,
+  authenticateWithImage("image"),
   validateCourse,
   createCourse
 );
@@ -31,6 +36,7 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
+  authenticateWithImage("image"),
   validateCourse,
   updateCourse
 );

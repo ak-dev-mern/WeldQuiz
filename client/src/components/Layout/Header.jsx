@@ -8,6 +8,11 @@ const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return "/default-avatar.png";
+    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-dark-800 dark:border-dark-600">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
@@ -51,7 +56,7 @@ const Header = ({ onMenuClick }) => {
               className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-dark-700"
             >
               <img
-                src={user?.profile?.avatar || "/default-avatar.png"}
+                src={getAvatarUrl(user?.profile?.avatar)}
                 alt={user?.username}
                 className="h-8 w-8 rounded-full"
               />

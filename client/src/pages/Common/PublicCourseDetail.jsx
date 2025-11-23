@@ -9,61 +9,52 @@ import {
   PlayCircle,
   ArrowLeft,
 } from "lucide-react";
+import { coursesAPI } from "../../services/api";
 
 const PublicCourseDetail = () => {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
-      setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        const coursesData = {
-          1: {
-            id: 1,
-            title: "AI Fundamentals",
-            description:
-              "Master the basics of artificial intelligence and machine learning with this comprehensive course designed for beginners.",
-            longDescription:
-              "This course provides a solid foundation in artificial intelligence and machine learning concepts. You'll learn about neural networks, deep learning, natural language processing, and computer vision through hands-on projects and real-world examples.",
-            duration: "8 weeks",
-            level: "Beginner",
-            students: "2.5k",
-            rating: 4.8,
-            image:
-              "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=400&fit=crop",
-            price: 99,
-            category: "AI & Machine Learning",
-            instructor: {
-              name: "Dr. Sarah Chen",
-              bio: "AI Researcher with 10+ years of experience at Google and MIT",
-              image:
-                "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-            },
-            modules: [
-              "Introduction to AI and Machine Learning",
-              "Neural Networks Fundamentals",
-              "Deep Learning Concepts",
-              "Natural Language Processing",
-              "Computer Vision Basics",
-              "AI Ethics and Future Trends",
-            ],
-            requirements: [
-              "Basic programming knowledge",
-              "High school mathematics",
-              "No prior AI experience required",
-            ],
-          },
-        };
-        setCourse(coursesData[id] || coursesData[1]);
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await coursesAPI.getCourse(id);
+
+        // Fix: Use course (singular) instead of courses (plural)
+        setCourse(response?.data?.course || response?.data);
+      } catch (err) {
+        console.error("Error fetching course:", err);
+        setError("Failed to load course details. Please try again later.");
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
-    fetchCourse();
+    if (id) {
+      fetchCourse();
+    }
   }, [id]);
+
+  // Helper function to get display price
+  const getDisplayPrice = (price) => {
+    if (typeof price === "number") {
+      return price;
+    }
+    if (typeof price === "object" && price !== null) {
+      return price.monthly || price.yearly || Object.values(price)[0] || 0;
+    }
+    return 0;
+  };
+
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return "/default-avatar.png";
+    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  };
 
   if (loading) {
     return (
@@ -82,12 +73,12 @@ const PublicCourseDetail = () => {
     );
   }
 
-  if (!course) {
+  if (error || !course) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-900 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Course not found
+            {error || "Course not found"}
           </h1>
           <Link
             to="/courses"
@@ -99,6 +90,8 @@ const PublicCourseDetail = () => {
       </div>
     );
   }
+
+  const displayPrice = getDisplayPrice(course.price);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-900 pt-20">
@@ -117,17 +110,25 @@ const PublicCourseDetail = () => {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-dark-800 rounded-xl shadow-lg overflow-hidden">
               <img
-                src={course.image}
+                src={
+                  course.image ||
+                  course.thumbnail ||
+                  "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=400&fit=crop"
+                }
                 alt={course.title}
                 className="w-full h-64 object-cover"
+                onError={(e) => {
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=400&fit=crop";
+                }}
               />
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">
-                    {course.category}
+                    {course.category || "Uncategorized"}
                   </span>
                   <span className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full text-sm font-medium">
-                    {course.level}
+                    {course.level || "All Levels"}
                   </span>
                 </div>
 
@@ -135,7 +136,9 @@ const PublicCourseDetail = () => {
                   {course.title}
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-                  {course.longDescription}
+                  {course.longDescription ||
+                    course.description ||
+                    "No description available."}
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -145,7 +148,7 @@ const PublicCourseDetail = () => {
                       Duration
                     </div>
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {course.duration}
+                      {course.duration || "Self-paced"}
                     </div>
                   </div>
                   <div className="text-center">
@@ -154,7 +157,10 @@ const PublicCourseDetail = () => {
                       Students
                     </div>
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {course.students}
+                      {course.enrollmentCount ||
+                        course.students ||
+                        course.enrolledStudents ||
+                        "0"}
                     </div>
                   </div>
                   <div className="text-center">
@@ -163,7 +169,7 @@ const PublicCourseDetail = () => {
                       Rating
                     </div>
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {course.rating}/5
+                      {course.rating || course.averageRating || "No ratings"}
                     </div>
                   </div>
                   <div className="text-center">
@@ -172,39 +178,54 @@ const PublicCourseDetail = () => {
                       Level
                     </div>
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {course.level}
+                      {course.level || "All Levels"}
                     </div>
                   </div>
                 </div>
 
-                {/* Course Modules */}
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    What You'll Learn
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {course.modules.map((module, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {module}
-                        </span>
-                      </div>
-                    ))}
+                {/* Course Modules/Curriculum */}
+                {(course.modules || course.curriculum || course.syllabus) && (
+                  <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      What You'll Learn
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {(
+                        course.modules ||
+                        course.curriculum ||
+                        course.syllabus ||
+                        []
+                      ).map((module, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {typeof module === "string"
+                              ? module
+                              : module.title || module.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Requirements */}
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Requirements
-                  </h2>
-                  <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
-                    {course.requirements.map((req, index) => (
-                      <li key={index}>{req}</li>
-                    ))}
-                  </ul>
-                </div>
+                {(course.requirements || course.prerequisites) && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Requirements
+                    </h2>
+                    <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                      {(course.requirements || course.prerequisites || []).map(
+                        (req, index) => (
+                          <li key={index}>
+                            {typeof req === "string" ? req : req.description}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -214,10 +235,12 @@ const PublicCourseDetail = () => {
             <div className="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-6 sticky top-24">
               <div className="text-center mb-6">
                 <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  ${course.price}
+                  ${displayPrice}
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
-                  One-time payment
+                  {typeof course.price === "object"
+                    ? "Subscription available"
+                    : "One-time payment"}
                 </div>
               </div>
 
@@ -262,26 +285,34 @@ const PublicCourseDetail = () => {
             </div>
 
             {/* Instructor */}
-            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-6 mt-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-                Instructor
-              </h3>
-              <div className="flex items-center gap-4">
-                <img
-                  src={course.instructor.image}
-                  alt={course.instructor.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">
-                    {course.instructor.name}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {course.instructor.bio}
+            {course.instructor && (
+              <div className="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-6 mt-6">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+                  Instructor
+                </h3>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={getAvatarUrl(course.instructor?.profile?.avatar)}
+                    alt={course.instructor.username}
+                    className="w-12 h-12 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face";
+                    }}
+                  />
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {course.instructor.username}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {course.instructor?.profile?.bio ||
+                        course.instructor.title ||
+                        "Course Instructor"}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

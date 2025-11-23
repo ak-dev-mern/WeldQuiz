@@ -1,7 +1,20 @@
 import express from "express";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
-import { getUserActivities, getUserCourses, getUserProfile, getUserProgress, updateUserProfile } from "../controllers/userController.js";
-import { deleteUser, getUserById, getUsers, updateUser, updateUserStatus } from "../controllers/adminController.js";
+import { authenticate, requireAdmin, uploadSingleImage } from "../middleware/auth.js";
+import {
+  getUserActivities,
+  getUserCourses,
+  getUserProfile,
+  getUserProgress,
+  updateUserProfile,
+} from "../controllers/userController.js";
+import {
+  deleteUser,
+  getUserById,
+  getUsers,
+  updateUser,
+  updateUserStatus,
+} from "../controllers/adminController.js";
+
 
 const router = express.Router();
 
@@ -17,11 +30,8 @@ router.get("/", authenticate, requireAdmin, getUsers);
 router.get("/:userId", authenticate, requireAdmin, getUserById);
 router.put("/:userId", authenticate, requireAdmin, updateUser);
 router.delete("/:userId", authenticate, requireAdmin, deleteUser);
-router.patch(
-  "/:userId/status",
-  authenticate,
-  requireAdmin,
-  updateUserStatus
-);
+router.patch("/:userId/status", authenticate, requireAdmin, updateUserStatus);
+
+
 
 export default router;

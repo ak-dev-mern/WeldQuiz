@@ -89,7 +89,7 @@ const HomeHeader = () => {
               Home
             </Link>
             <Link
-              to="/public-courses"
+              to="/courses"
               className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
             >
               Courses

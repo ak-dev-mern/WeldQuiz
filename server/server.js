@@ -13,6 +13,7 @@ import {
   discussionLimiter,
   generalLimiter,
 } from "./middleware/security.js";
+import path from "path";
 
 // Import routes
 import authRoutes from "./routes/auth.js";
@@ -34,6 +35,8 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Enhanced CORS configuration
 const allowedOrigins = [
@@ -155,7 +158,6 @@ app.use("/api/auth/forgot-password", sensitiveLimiter);
 app.use("/api/auth/reset-password", sensitiveLimiter);
 app.use("/api/auth/change-password", sensitiveLimiter);
 app.use("/api/", apiLimiter);
-
 
 // Request logging middleware with improved formatting
 app.use((req, res, next) => {
