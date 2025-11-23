@@ -1,123 +1,246 @@
-import { useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import Home from "./pages/public/Home";
-import Contact from "./pages/public/Contact";
-import About from "./pages/public/About";
-import TermsAndConditions from "./pages/public/TermsAndConditions";
-import PrivacyPolicy from "./pages/public/PrivacyPolicy";
-import PriceDetails from "./pages/public/PriceDetails";
-import RegisterPage from "./pages/auth/RegisterPage";
-import LoginPage from "./pages/auth/LoginPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import StudentDashboard from "./pages/student/StudentDashboard";
-import Error404 from "./pages/Error404";
-import PrivateRoute from "./pages/PrivateRoute";
-import ScrollToTop from "./components/ScrollTop";
-import MyProfile from "./pages/student/MyProfile";
-import { useSelector, useDispatch } from "react-redux";
-import Cookies from "js-cookie";
-import { logoutStudent } from "./features/studentSlice"; // Make sure this import path is correct
-import Faq from "./pages/public/Faq";
-import Feedback from "./pages/public/Feedback";
-import Discussion from "./pages/public/Discussion";
-import PaymentReceipt from "./pages/student/PaymentReceipt";
-import PaymentSuccess from "./pages/student/PaymentSuccess";
-import PaymentCancelled from "./pages/student/PaymentCancelled";
-import DiscussionDetail from "./pages/public/DiscussionDetail";
-import PaidQuizDetails from "./pages/student/PaidQuizDetails";
-import PaidQuizLessons from "./pages/student/PaidQuizLessons";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
+import "./index.css";
+// Contexts
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
-// Auth check utility function
-const checkAuth = () => {
-  const token = Cookies.get("token");
-  const role = Cookies.get("role");
-  return { isAuthenticated: !!token, role };
+// Components
+import Layout from "./components/Layout/Layout";
+import PublicLayout from "./components/Layout/PublicLayout";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import AdminRoute from "./components/Auth/AdminRoute";
+import PageLoader from "./components/UI/PageLoader";
+
+// Public Pages (Lazy loaded)
+const Home = React.lazy(() => import("./pages/Common/Home"));
+const Login = React.lazy(() => import("./pages/Auth/Login"));
+const Register = React.lazy(() => import("./pages/Auth/Register"));
+const ForgotPassword = React.lazy(() => import("./pages/Auth/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/Auth/ResetPassword"));
+const HelpCenter = React.lazy(() => import("./pages/Common/HelpCenter"));
+const TermsAndConditions = React.lazy(() =>
+  import("./pages/Common/TermsAndConditions")
+);
+const PrivacyPolicy = React.lazy(() => import("./pages/Common/PrivacyPolicy"));
+const Pricing = React.lazy(() => import("./pages/Common/Pricing"));
+const About = React.lazy(() => import("./pages/Common/About"));
+const Contact = React.lazy(() => import("./pages/Common/Contact"));
+const PublicCourses = React.lazy(() => import("./pages/Common/PublicCourses"));
+const PublicCourseDetail = React.lazy(() =>
+  import("./pages/Common/PublicCourseDetail")
+);
+
+// Protected Pages (Lazy loaded)
+const Dashboard = React.lazy(() => import("./pages/Dashboard/Dashboard"));
+const Courses = React.lazy(() => import("./pages/Courses/Courses"));
+const CourseDetail = React.lazy(() => import("./pages/Courses/CourseDetail"));
+const Exam = React.lazy(() => import("./pages/Exam/Exam"));
+const ExamResult = React.lazy(() => import("./pages/Exam/ExamResult"));
+const Profile = React.lazy(() => import("./pages/Profile/Profile"));
+const Discussion = React.lazy(() => import("./pages/Discussion/Discussion"));
+const Activities = React.lazy(() => import("./pages/Activities/Activities"));
+const AdminDashboard = React.lazy(() => import("./pages/Admin/AdminDashboard"));
+const AdminCourses = React.lazy(() => import("./pages/Admin/AdminCourses"));
+const AdminUsers = React.lazy(() => import("./pages/Admin/AdminUsers"));
+const AdminSettings = React.lazy(() => import("./pages/Admin/AdminSettings"));
+const DemoQuestions = React.lazy(() => import("./pages/Exam/DemoQuestions"));
+const AddCourse = React.lazy(() => import("./pages/Admin/AddCourse"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+// Component to handle authenticated home page redirection
+const HomeRedirect = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  // If user is logged in, redirect to dashboard
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If not logged in, show public home page
+  return <Home />;
 };
 
-// AppContent: Handles routing and protected routes
-function AppContent() {
-  const student = useSelector((state) => state.student.student);
-
-  return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Home />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/legal/terms&conditions" element={<TermsAndConditions />} />
-      <Route path="/legal/privacypolicy" element={<PrivacyPolicy />} />
-      <Route path="/others/pricedetails" element={<PriceDetails />} />
-      <Route path="/others/faq" element={<Faq />} />
-      <Route path="/others/feedback" element={<Feedback />} />
-      <Route path="/others/discussion" element={<Discussion />} />
-      <Route path="/others/discussion/:id" element={<DiscussionDetail />} />
-
-      {/* Admin Routes (Protected) */}
-      <Route
-        path="/admin/*"
-        element={
-          <PrivateRoute role="admin" student={student}>
-            <Routes>
-              <Route path="dashboard" element={<AdminDashboard />} />
-            </Routes>
-          </PrivateRoute>
-        }
-      />
-
-      {/* Student Routes (Protected) */}
-      <Route
-        path="/student/*"
-        element={
-          <PrivateRoute role="student" student={student}>
-            <Routes>
-              <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="profile" element={<MyProfile />} />
-              <Route path="payment-success" element={<PaymentSuccess />} />
-              <Route path="payment-cancelled" element={<PaymentCancelled />} />
-              <Route path="payment-receipt" element={<PaymentReceipt />} />
-              <Route
-                path="paid-quiz/:category/:lesson"
-                element={<PaidQuizDetails />}
-              />
-              <Route path="paid-quiz/:category" element={<PaidQuizLessons />} />
-            </Routes>
-          </PrivateRoute>
-        }
-      />
-
-      {/* Catch-all Error Page */}
-      <Route path="*" element={<Error404 />} />
-    </Routes>
-  );
-}
-
-// Main App component that handles routing and auto-logout
 function App() {
-  const dispatch = useDispatch();
-
-  // Session monitoring effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!checkAuth().isAuthenticated) {
-        dispatch(logoutStudent());
-      }
-    }, 300000); // Check every 5 minutes
-
-    return () => clearInterval(interval);
-  }, [dispatch]);
-
   return (
-    <Router>
-      <ScrollToTop />
-      <AppContent />
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <div className="App">
+              <React.Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public Routes with HomeHeader & Footer */}
+                  <Route path="/" element={<PublicLayout />}>
+                    <Route index element={<HomeRedirect />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    <Route
+                      path="forgot-password"
+                      element={<ForgotPassword />}
+                    />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="help-center" element={<HelpCenter />} />
+                    <Route path="terms" element={<TermsAndConditions />} />
+                    <Route path="privacy" element={<PrivacyPolicy />} />
+                    <Route path="pricing" element={<Pricing />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="contact" element={<Contact />} />
+                    <Route path="public-courses" element={<PublicCourses />} />
+                    <Route
+                      path="public-courses/:id"
+                      element={<PublicCourseDetail />}
+                    />
+                  </Route>
+
+                  {/* Protected Routes with Dashboard Layout (No Footer) */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Layout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route index element={<Dashboard />} />
+                    <Route path="courses" element={<Courses />} />
+                    <Route path="courses/:id" element={<CourseDetail />} />
+                    <Route path="exam/:courseId/:unitId" element={<Exam />} />
+                    <Route
+                      path="exam-result/:resultId"
+                      element={<ExamResult />}
+                    />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="discussion" element={<Discussion />} />
+                    <Route path="activities" element={<Activities />} />
+                    <Route
+                      path="demo-questions/:courseId"
+                      element={<DemoQuestions />}
+                    />
+                    {/* Admin Routes */}
+                    <Route
+                      path="admin"
+                      element={
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="admin/courses"
+                      element={
+                        <AdminRoute>
+                          <AdminCourses />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="admin/add-course"
+                      element={
+                        <AdminRoute>
+                          <AddCourse />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="admin/edit-course/:courseId"
+                      element={
+                        <AdminRoute>
+                          <AddCourse />
+                        </AdminRoute>
+                      }
+                    />
+
+                    <Route
+                      path="admin/users"
+                      element={
+                        <AdminRoute>
+                          <AdminUsers />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route
+                      path="admin/settings"
+                      element={
+                        <AdminRoute>
+                          <AdminSettings />
+                        </AdminRoute>
+                      }
+                    />
+                  </Route>
+
+                  {/* 404 Page */}
+                  <Route
+                    path="*"
+                    element={
+                      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-900">
+                        <div className="text-center">
+                          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                            404
+                          </h1>
+                          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
+                            Page not found
+                          </p>
+                          <a href="/" className="btn btn-primary">
+                            Go Home
+                          </a>
+                        </div>
+                      </div>
+                    }
+                  />
+                </Routes>
+              </React.Suspense>
+
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: "#363636",
+                    color: "#fff",
+                  },
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: "#22c55e",
+                      secondary: "#fff",
+                    },
+                  },
+                  error: {
+                    duration: 5000,
+                    iconTheme: {
+                      primary: "#ef4444",
+                      secondary: "#fff",
+                    },
+                  },
+                }}
+              />
+            </div>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

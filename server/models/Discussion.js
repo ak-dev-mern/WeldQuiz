@@ -1,52 +1,127 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
+import mongoose from "mongoose";
 
-const Discussion = sequelize.define(
-  "Discussion",
+const discussionSchema = new mongoose.Schema(
   {
-    discussion_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+    unit: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     title: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200,
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+    content: {
+      type: String,
+      required: true,
+      maxlength: 5000,
     },
-    image: {
-      type: DataTypes.STRING, // Filename or file path
-      allowNull: true,
+    isPinned: {
+      type: Boolean,
+      default: false,
     },
-    created_by: {
-      type: DataTypes.INTEGER, // No UNSIGNED to match Users.id if it's signed
-      allowNull: false,
-      references: {
-        model: "users", // Make sure this matches your actual table/model name
-        key: "id",
+    isResolved: {
+      type: Boolean,
+      default: false,
+    },
+    tags: [String],
+    upvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
+    ],
+    downvotes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    views: {
+      type: Number,
+      default: 0,
     },
-    created_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+    replies: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        content: {
+          type: String,
+          required: true,
+          maxlength: 2000,
+        },
+        isInstructorReply: {
+          type: Boolean,
+          default: false,
+        },
+        upvotes: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+        ],
+        downvotes: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+        ],
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
-    tableName: "discussions",
   }
 );
 
-// Association
-Discussion.associate = (models) => {
-  Discussion.belongsTo(models.User, {
-    foreignKey: "created_by",
-    targetKey: "id",
-    as: "creator", // optional alias
-  });
+// Indexes
+discussionSchema.index({ course: 1, unit: 1, createdAt: -1 });
+discussionSchema.index({ user: 1 });
+discussionSchema.index({ isPinned: -1, createdAt: -1 });
+discussionSchema.index({ isResolved: 1 });
+discussionSchema.index({ tags: 1 });
+
+// Virtual for vote count
+discussionSchema.virtual("voteCount").get(function () {
+  return this.upvotes.length - this.downvotes.length;
+});
+
+// Virtual for reply count
+discussionSchema.virtual("replyCount").get(function () {
+  return this.replies.length;
+});
+
+// Method to check if user has voted
+discussionSchema.methods.hasUserVoted = function (userId) {
+  return this.upvotes.includes(userId) || this.downvotes.includes(userId);
 };
 
-export default Discussion;
+// Method to add view
+discussionSchema.methods.addView = function () {
+  this.views += 1;
+  return this.save();
+};
+
+export default mongoose.model("Discussion", discussionSchema);
