@@ -26,6 +26,7 @@ import {
 import LoadingSpinner from "../../components/UI/LoadingSpinner";
 import EmptyState from "../../components/UI/EmptyState";
 import toast from "react-hot-toast";
+import getAvatarUrl from "../../hooks/useGetAvatarUrl";
 
 const AdminCourses = () => {
   const queryClient = useQueryClient();
@@ -263,9 +264,22 @@ const CourseRow = ({
   onViewDetails,
   onEdit,
 }) => {
-  const getAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return "/default-avatar.png";
-    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  // Get total lessons from units
+  const getTotalLessons = () => {
+    if (!course.units || course.units.length === 0) return 0;
+    return course.units.reduce(
+      (total, unit) => total + (unit.lessons?.length || 0),
+      0
+    );
+  };
+
+  // Get total questions from units
+  const getTotalQuestions = () => {
+    if (!course.units || course.units.length === 0) return 0;
+    return course.units.reduce(
+      (total, unit) => total + (unit.questions?.length || 0),
+      0
+    );
   };
 
   return (
@@ -283,6 +297,10 @@ const CourseRow = ({
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {course.category} • {course.level}
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              {course.units?.length || 0} units • {getTotalLessons()} lessons •{" "}
+              {getTotalQuestions()} questions
             </div>
           </div>
         </div>
@@ -372,21 +390,10 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
     });
   };
 
-  const getCompletionPercentage = () => {
-    if (!course.modules || course.modules.length === 0) return 0;
-    const totalLessons = course.modules.reduce(
-      (total, module) => total + (module.lessons?.length || 0),
-      0
-    );
-    return totalLessons > 0
-      ? Math.round(((course.completedLessons || 0) / totalLessons) * 100)
-      : 0;
-  };
-
   const getTotalDuration = () => {
-    if (!course.modules || course.modules.length === 0) return "0 hours";
-    const totalMinutes = course.modules.reduce(
-      (total, module) => total + (module.duration || 0),
+    if (!course.units || course.units.length === 0) return "0 hours";
+    const totalMinutes = course.units.reduce(
+      (total, unit) => total + (unit.duration || 0),
       0
     );
     const hours = Math.floor(totalMinutes / 60);
@@ -394,14 +401,56 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
+  const getTotalLessons = () => {
+    if (!course.units || course.units.length === 0) return 0;
+    return course.units.reduce(
+      (total, unit) => total + (unit.lessons?.length || 0),
+      0
+    );
+  };
+
+  const getTotalQuestions = () => {
+    if (!course.units || course.units.length === 0) return 0;
+    return course.units.reduce(
+      (total, unit) => total + (unit.questions?.length || 0),
+      0
+    );
+  };
+
   const getAvatarUrl = (avatarPath) => {
     if (!avatarPath) return "/default-avatar.png";
     return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
   };
 
+  const getQuestionTypeIcon = (type) => {
+    switch (type) {
+      case "multiple_choice":
+        return <FileText className="h-4 w-4 text-blue-500" />;
+      case "true_false":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "short_answer":
+        return <Edit2 className="h-4 w-4 text-orange-500" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "easy":
+        return "text-success-600 bg-success-100 dark:bg-success-900 dark:text-success-300";
+      case "medium":
+        return "text-warning-600 bg-warning-100 dark:bg-warning-900 dark:text-warning-300";
+      case "hard":
+        return "text-error-600 bg-error-100 dark:bg-error-900 dark:text-error-300";
+      default:
+        return "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-300";
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-dark-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-dark-800 rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dark-600">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -418,9 +467,9 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
         {/* Modal Body */}
         <div className="p-6 space-y-6">
           {/* Course Header */}
-          <div className="flex flex-col  gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Course Image */}
-            <div className="lg:w-full">
+            <div className="lg:w-1/3">
               <img
                 src={course.image}
                 alt={course.title}
@@ -429,7 +478,7 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
             </div>
 
             {/* Course Basic Info */}
-            <div className="lg:w-full space-y-4">
+            <div className="lg:w-2/3 space-y-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {course.title}
@@ -437,6 +486,11 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
                 <p className="text-gray-600 dark:text-gray-400 mt-2">
                   {course.description}
                 </p>
+                {course.shortDescription && (
+                  <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+                    {course.shortDescription}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -470,9 +524,20 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Price
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {course.price === 0 ? "Free" : `$${course.price}`}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Monthly:{" "}
+                        {course.price?.monthly === 0
+                          ? "Free"
+                          : `$${course.price?.monthly}`}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Yearly:{" "}
+                        {course.price?.yearly === 0
+                          ? "Free"
+                          : `$${course.price?.yearly}`}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -495,11 +560,7 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
                       Lessons
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {course.modules?.reduce(
-                        (total, module) =>
-                          total + (module.lessons?.length || 0),
-                        0
-                      ) || 0}
+                      {getTotalLessons()}
                     </p>
                   </div>
                 </div>
@@ -599,59 +660,253 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center">
               <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {course.modules?.length || 0}
+                {course.units?.length || 0}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Modules
-              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Units</p>
             </div>
 
             <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center">
               <BookOpen className="h-8 w-8 text-orange-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {getCompletionPercentage()}%
+                {getTotalQuestions()}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Completion
+                Questions
               </p>
             </div>
           </div>
 
-          {/* Course Modules */}
-          {course.modules && course.modules.length > 0 && (
+          {/* Course Units with Lessons and Questions */}
+          {course.units && course.units.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Course Modules ({course.modules.length})
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Course Structure ({course.units.length} Units)
               </h3>
-              <div className="space-y-3">
-                {course.modules.map((module, index) => (
-                  <div
-                    key={module._id}
-                    className="border border-gray-200 dark:border-dark-600 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {index + 1}. {module.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {module.description}
-                        </p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1">
-                            <PlayCircle className="h-3 w-3" />
-                            <span>{module.lessons?.length || 0} lessons</span>
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{module.duration || 0} minutes</span>
-                          </span>
+              <div className="space-y-4">
+                {course.units
+                  .sort((a, b) => a.order - b.order)
+                  .map((unit, unitIndex) => (
+                    <div
+                      key={unit._id || unitIndex}
+                      className="border border-gray-200 dark:border-dark-600 rounded-lg overflow-hidden"
+                    >
+                      {/* Unit Header */}
+                      <div className="bg-gray-50 dark:bg-dark-700 px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                              Unit {unitIndex + 1}: {unit.title}
+                            </h4>
+                            {unit.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {unit.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center space-x-1">
+                              <PlayCircle className="h-4 w-4" />
+                              <span>{unit.lessons?.length || 0} lessons</span>
+                            </span>
+                            <span className="flex items-center space-x-1">
+                              <FileText className="h-4 w-4" />
+                              <span>
+                                {unit.questions?.length || 0} questions
+                              </span>
+                            </span>
+                            <span className="flex items-center space-x-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{unit.duration || 0} min</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Lessons */}
+                      {unit.lessons && unit.lessons.length > 0 && (
+                        <div className="p-4 border-b border-gray-200 dark:border-dark-600">
+                          <h5 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                            <PlayCircle className="h-4 w-4 text-blue-500" />
+                            <span>Lessons ({unit.lessons.length})</span>
+                          </h5>
+                          <div className="space-y-2">
+                            {unit.lessons
+                              .sort((a, b) => a.order - b.order)
+                              .map((lesson, lessonIndex) => (
+                                <div
+                                  key={lesson._id || lessonIndex}
+                                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-700 rounded-lg"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-300 rounded-full flex items-center justify-center text-xs font-medium">
+                                      {lessonIndex + 1}
+                                    </div>
+                                    <div>
+                                      <h6 className="font-medium text-gray-900 dark:text-white text-sm">
+                                        {lesson.title}
+                                      </h6>
+                                      <div className="flex items-center space-x-3 mt-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                          {lesson.duration || 0} min
+                                        </span>
+                                        {lesson.isFree && (
+                                          <span className="text-xs bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300 px-2 py-0.5 rounded-full">
+                                            Free
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {lesson.videoUrl && (
+                                      <PlayCircle className="h-4 w-4 text-gray-400" />
+                                    )}
+                                    {lesson.resources &&
+                                      lesson.resources.length > 0 && (
+                                        <FileText className="h-4 w-4 text-gray-400" />
+                                      )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Questions */}
+                      {unit.questions && unit.questions.length > 0 && (
+                        <div className="p-4">
+                          <h5 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                            <FileText className="h-4 w-4 text-green-500" />
+                            <span>
+                              Assessment Questions ({unit.questions.length})
+                            </span>
+                          </h5>
+                          <div className="space-y-3">
+                            {unit.questions.map((question, questionIndex) => (
+                              <div
+                                key={question._id || questionIndex}
+                                className="p-3 bg-white dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-lg"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    {getQuestionTypeIcon(question.questionType)}
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                      Q{questionIndex + 1}: {question.question}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <span
+                                      className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                                        question.difficulty
+                                      )}`}
+                                    >
+                                      {question.difficulty}
+                                    </span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      {question.marks} mark
+                                      {question.marks !== 1 ? "s" : ""}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Options for multiple choice */}
+                                {question.questionType === "multiple_choice" &&
+                                  question.options && (
+                                    <div className="ml-6 space-y-1 mt-2">
+                                      {question.options.map(
+                                        (option, optionIndex) => (
+                                          <div
+                                            key={optionIndex}
+                                            className={`text-sm p-2 rounded ${
+                                              option === question.correctAnswer
+                                                ? "bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-800"
+                                                : "bg-gray-50 dark:bg-dark-700 text-gray-700 dark:text-gray-300"
+                                            }`}
+                                          >
+                                            {String.fromCharCode(
+                                              65 + optionIndex
+                                            )}
+                                            . {option}
+                                            {option ===
+                                              question.correctAnswer && (
+                                              <CheckCircle className="h-3 w-3 text-success-500 inline ml-2" />
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+
+                                {/* True/False options */}
+                                {question.questionType === "true_false" && (
+                                  <div className="ml-6 space-y-1 mt-2">
+                                    {["True", "False"].map((option) => (
+                                      <div
+                                        key={option}
+                                        className={`text-sm p-2 rounded ${
+                                          option === question.correctAnswer
+                                            ? "bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-800"
+                                            : "bg-gray-50 dark:bg-dark-700 text-gray-700 dark:text-gray-300"
+                                        }`}
+                                      >
+                                        {option}
+                                        {option === question.correctAnswer && (
+                                          <CheckCircle className="h-3 w-3 text-success-500 inline ml-2" />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Short answer */}
+                                {question.questionType === "short_answer" && (
+                                  <div className="ml-6 mt-2">
+                                    <div className="text-sm bg-gray-50 dark:bg-dark-700 p-2 rounded border border-gray-200 dark:border-dark-500">
+                                      <strong>Correct Answer:</strong>{" "}
+                                      {question.correctAnswer}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {question.explanation && (
+                                  <div className="ml-6 mt-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      <strong>Explanation:</strong>{" "}
+                                      {question.explanation}
+                                    </p>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <span>Time limit: {question.timeLimit}s</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
+            </div>
+          )}
+
+          {/* Learning Outcomes */}
+          {course.learningOutcomes && course.learningOutcomes.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Learning Outcomes
+              </h3>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {course.learningOutcomes.map((outcome, index) => (
+                  <li key={index} className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0" />
+                    <span className="text-gray-600 dark:text-gray-400 text-sm">
+                      {outcome}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -669,22 +924,22 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
             </div>
           )}
 
-          {/* What You'll Learn */}
-          {course.learnings && course.learnings.length > 0 && (
+          {/* Tags */}
+          {course.tags && course.tags.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                What You'll Learn
+                Tags
               </h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {course.learnings.map((learning, index) => (
-                  <li key={index} className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0" />
-                    <span className="text-gray-600 dark:text-gray-400 text-sm">
-                      {learning}
-                    </span>
-                  </li>
+              <div className="flex flex-wrap gap-2">
+                {course.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-300 text-sm rounded-full"
+                  >
+                    {tag}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>

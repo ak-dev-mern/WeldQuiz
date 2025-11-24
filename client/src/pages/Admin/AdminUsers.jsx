@@ -25,6 +25,7 @@ import {
 import LoadingSpinner from "../../components/UI/LoadingSpinner";
 import EmptyState from "../../components/UI/EmptyState";
 import toast from "react-hot-toast";
+import getAvatarUrl from "../../hooks/useGetAvatarUrl";
 
 const AdminUsers = () => {
   const queryClient = useQueryClient();
@@ -396,11 +397,6 @@ const UsersListView = ({
   onEdit,
   onViewDetails,
 }) => {
-  const getAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return "/default-avatar.png";
-    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
-  };
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -517,11 +513,6 @@ const UsersGridView = ({
   onEdit,
   onViewDetails,
 }) => {
-  const getAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return "/default-avatar.png";
-    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
       {users?.map((user) => (

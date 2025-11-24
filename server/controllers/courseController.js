@@ -13,6 +13,11 @@ export const createCourse = async (req, res) => {
       instructor: req.user._id,
     };
 
+    console.log(
+      "Creating course with data:",
+      JSON.stringify(courseData, null, 2)
+    );
+
     const course = new Course(courseData);
     await course.save();
 
@@ -26,6 +31,7 @@ export const createCourse = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error creating course",
+      error: error.message,
     });
   }
 };
@@ -56,6 +62,7 @@ export const getCourses = async (req, res) => {
 
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
+    // FIXED: Remove populate for embedded documents
     const courses = await Course.find(filter)
       .populate("instructor", "username profile")
       .sort(sort)
@@ -76,12 +83,14 @@ export const getCourses = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching courses",
+      error: error.message,
     });
   }
 };
 
 export const getCourse = async (req, res) => {
   try {
+    // FIXED: Remove populate for embedded documents
     const course = await Course.findById(req.params.id)
       .populate("instructor", "username profile")
       .populate("ratings.user", "username profile");
@@ -122,6 +131,7 @@ export const getCourse = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching course",
+      error: error.message,
     });
   }
 };
@@ -148,11 +158,33 @@ export const updateCourse = async (req, res) => {
       });
     }
 
+    console.log(
+      "Updating course with data:",
+      JSON.stringify(req.body, null, 2)
+    );
+    console.log("Units data:", req.body.units);
+    console.log("Questions in first unit:", req.body.units?.[0]?.questions);
+
+    // FIXED: Use findByIdAndUpdate with proper options to handle nested arrays
     const updatedCourse = await Course.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true, runValidators: true }
+      {
+        $set: req.body,
+      },
+      {
+        new: true,
+        runValidators: true,
+        // Important: This ensures nested arrays are properly handled
+        overwrite: false, // Don't overwrite entire doc, just update fields
+      }
     );
+
+    if (!updatedCourse) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found after update",
+      });
+    }
 
     res.json({
       success: true,
@@ -164,6 +196,7 @@ export const updateCourse = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error updating course",
+      error: error.message,
     });
   }
 };

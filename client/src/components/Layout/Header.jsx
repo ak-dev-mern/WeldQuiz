@@ -3,15 +3,11 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Menu, Bell, Search, User, LogOut, Settings } from "lucide-react";
 import ThemeToggle from "../Theme/ThemeToggle";
+import getAvatarUrl from "../../hooks/useGetAvatarUrl";
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const getAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return "/default-avatar.png";
-    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
-  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-dark-800 dark:border-dark-600">

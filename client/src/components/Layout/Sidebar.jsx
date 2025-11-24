@@ -11,6 +11,7 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
+import getAvatarUrl from "../../hooks/useGetAvatarUrl";
 
 const Sidebar = ({ open, setOpen }) => {
   const { user, isAdmin } = useAuth();
@@ -36,11 +37,6 @@ const Sidebar = ({ open, setOpen }) => {
       return location.pathname === "/";
     }
     return location.pathname.startsWith(href);
-  };
-
-  const getAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return "/default-avatar.png";
-    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
   };
 
   return (
