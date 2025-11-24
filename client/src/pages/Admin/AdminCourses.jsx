@@ -263,6 +263,11 @@ const CourseRow = ({
   onViewDetails,
   onEdit,
 }) => {
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return "/default-avatar.png";
+    return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  };
+
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
       <td className="py-4 px-4">
@@ -286,7 +291,7 @@ const CourseRow = ({
       <td className="py-4 px-4">
         <div className="flex items-center space-x-2">
           <img
-            src={course.instructor?.profile?.avatar || "/default-avatar.png"}
+            src={getAvatarUrl(course.instructor?.profile?.avatar)}
             alt={course.instructor?.username}
             className="w-6 h-6 rounded-full"
           />
