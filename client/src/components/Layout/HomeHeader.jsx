@@ -10,6 +10,12 @@ const HomeHeader = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const dashboardLink = user
+    ? user.role === "admin"
+      ? "/dashboard/admin"
+      : "/dashboard"
+    : "/";
+
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -71,7 +77,10 @@ const HomeHeader = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link
+            to={dashboardLink}
+            className="flex items-center space-x-2 group"
+          >
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-700 transition-colors">
               <span className="text-white font-bold text-lg">L</span>
             </div>

@@ -90,7 +90,6 @@ export const getCourses = async (req, res) => {
 
 export const getCourse = async (req, res) => {
   try {
-    // FIXED: Remove populate for embedded documents
     const course = await Course.findById(req.params.id)
       .populate("instructor", "username profile")
       .populate("ratings.user", "username profile");
@@ -102,7 +101,9 @@ export const getCourse = async (req, res) => {
       });
     }
 
-    // Check if user is enrolled (for protected content)
+    const courseData = course.toObject();
+
+    // Check if user is enrolled
     const isEnrolled = req.user
       ? await User.exists({
           _id: req.user._id,
@@ -110,21 +111,52 @@ export const getCourse = async (req, res) => {
         })
       : false;
 
-    const courseData = course.toObject();
+    // FIXED: Check for admin role AND instructor ownership
+const isAdmin =
+  req.user && (req.user.role === "admin" || req.user.role === "instructor");
+    const isInstructor =
+      req.user && course.instructor._id.toString() === req.user._id.toString();
 
-    if (!isEnrolled && req.user?.role !== "admin") {
-      // Remove protected content for non-enrolled users
+    console.log(`Course Access Debug:
+      User ID: ${req.user?._id}
+      User Role: ${req.user?.role}
+      Is Admin: ${isAdmin}
+      Is Instructor: ${isInstructor}
+      Is Enrolled: ${isEnrolled}
+      Course Instructor: ${course.instructor._id}
+    `);
+
+    // FIXED: Show ALL questions for admin users and course instructors
+    if (isAdmin || isInstructor) {
+      console.log("Showing ALL questions for admin/instructor");
+      // No filtering - return complete course data
+    } else if (isEnrolled) {
+      console.log("Showing ALL questions for enrolled student");
+      // No filtering - enrolled students see all questions
+    } else {
+      // Non-enrolled, non-admin users only see free lessons and no questions
+      console.log("Hiding questions for non-enrolled student");
       courseData.units = courseData.units.map((unit) => ({
         ...unit,
         lessons: unit.lessons.filter((lesson) => lesson.isFree),
-        questions: [], // Hide questions for non-enrolled
+        questions: [], // Hide questions
       }));
     }
+
+    // Log final question count for debugging
+    const totalQuestions = courseData.units.reduce(
+      (total, unit) => total + (unit.questions?.length || 0),
+      0
+    );
+    console.log(`Final course data has ${totalQuestions} questions`);
 
     res.json({
       success: true,
       course: courseData,
       isEnrolled: !!isEnrolled,
+      userRole: req.user?.role || "guest",
+      isInstructor: !!isInstructor,
+      isAdmin: !!isAdmin,
     });
   } catch (error) {
     console.error("Get course error:", error);
@@ -149,35 +181,35 @@ export const updateCourse = async (req, res) => {
 
     // Check if user is instructor or admin
     if (
-      course.instructor.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      !req.user ||
+      (course.instructor._id.toString() !== req.user._id.toString() &&
+        req.user.role !== "admin")
     ) {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Only instructor or admin can update course.",
+        message:
+          "Access denied. Only the instructor or admin can update this course.",
       });
     }
 
+    // Optional: Log incoming data
     console.log(
       "Updating course with data:",
       JSON.stringify(req.body, null, 2)
     );
-    console.log("Units data:", req.body.units);
-    console.log("Questions in first unit:", req.body.units?.[0]?.questions);
 
-    // FIXED: Use findByIdAndUpdate with proper options to handle nested arrays
+    // Update the course
     const updatedCourse = await Course.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: req.body,
-      },
+      { $set: req.body },
       {
         new: true,
         runValidators: true,
-        // Important: This ensures nested arrays are properly handled
-        overwrite: false, // Don't overwrite entire doc, just update fields
+        overwrite: false,
       }
-    );
+    )
+      .populate("instructor", "username profile")
+      .populate("ratings.user", "username profile");
 
     if (!updatedCourse) {
       return res.status(404).json({
@@ -222,13 +254,11 @@ export const deleteCourse = async (req, res) => {
       });
     }
 
-    // Soft delete
-    course.isActive = false;
-    await course.save();
+    await Course.findByIdAndDelete(req.params.id); // DELETE from DB
 
     res.json({
       success: true,
-      message: "Course deleted successfully",
+      message: "Course deleted permanently",
     });
   } catch (error) {
     console.error("Delete course error:", error);

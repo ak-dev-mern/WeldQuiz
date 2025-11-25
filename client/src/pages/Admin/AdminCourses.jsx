@@ -467,125 +467,128 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
         {/* Modal Body */}
         <div className="p-6 space-y-6">
           {/* Course Header */}
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Course Image */}
-            <div className="lg:w-1/3">
+          <div className="flex flex-col gap-8">
+            {/* Full Width Course Image */}
+            <div className="w-full">
               <img
                 src={course.image}
                 alt={course.title}
-                className="w-full h-48 lg:h-64 rounded-lg object-cover"
+                className="w-full h-64 md:h-80 lg:h-96 rounded-xl object-cover"
               />
             </div>
 
             {/* Course Basic Info */}
-            <div className="lg:w-2/3 space-y-4">
+            <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   {course.title}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
+
+                <p className="text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
                   {course.description}
                 </p>
+
                 {course.shortDescription && (
-                  <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+                  <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm leading-relaxed">
                     {course.shortDescription}
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Tag className="h-4 w-4 text-gray-400" />
+              {/* Course Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {/* Category */}
+                <div className="flex items-start space-x-2">
+                  <Tag className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Category
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                    <p className="font-medium text-gray-900 dark:text-white capitalize">
                       {course.category}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <BarChart3 className="h-4 w-4 text-gray-400" />
+                {/* Level */}
+                <div className="flex items-start space-x-2">
+                  <BarChart3 className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Level
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                    <p className="font-medium text-gray-900 dark:text-white capitalize">
                       {course.level}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
+                {/* Price */}
+                <div className="flex items-start space-x-2">
+                  <DollarSign className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Price
                     </p>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Monthly:{" "}
-                        {course.price?.monthly === 0
-                          ? "Free"
-                          : `$${course.price?.monthly}`}
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Yearly:{" "}
-                        {course.price?.yearly === 0
-                          ? "Free"
-                          : `$${course.price?.yearly}`}
-                      </p>
-                    </div>
+                    <p className="font-medium">
+                      Monthly:{" "}
+                      {course.price?.monthly === 0
+                        ? "Free"
+                        : `$${course.price?.monthly}`}
+                    </p>
+                    <p className="font-medium">
+                      Yearly:{" "}
+                      {course.price?.yearly === 0
+                        ? "Free"
+                        : `$${course.price?.yearly}`}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
+                {/* Duration */}
+                <div className="flex items-start space-x-2">
+                  <Clock className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Duration
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {getTotalDuration()}
-                    </p>
+                    <p className="font-medium">{getTotalDuration()}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <PlayCircle className="h-4 w-4 text-gray-400" />
+                {/* Lessons */}
+                <div className="flex items-start space-x-2">
+                  <PlayCircle className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Lessons
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {getTotalLessons()}
-                    </p>
+                    <p className="font-medium">{getTotalLessons()}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                {/* Created Date */}
+                <div className="flex items-start space-x-2">
+                  <Calendar className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Created
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium">
                       {formatDate(course.createdAt)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Status and Rating */}
-              <div className="flex items-center space-x-4">
+              {/* Status & Rating */}
+              <div className="flex items-center space-x-6">
                 <button
                   onClick={() => onStatusToggle(course._id, course.isActive)}
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium ${
                     course.isActive
-                      ? "bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200"
-                      : "bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   }`}
                 >
                   {course.isActive ? (
@@ -596,12 +599,12 @@ const CourseDetailModal = ({ course, onClose, onEdit, onStatusToggle }) => {
                   {course.isActive ? "Active" : "Inactive"}
                 </button>
 
-                <div className="flex items-center space-x-1">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center space-x-2">
+                  <Star className="h-6 w-6 text-yellow-400 fill-current" />
+                  <span className="text-lg font-semibold">
                     {course.averageRating?.toFixed(1) || "0.0"}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-sm text-gray-500">
                     ({course.totalReviews || 0} reviews)
                   </span>
                 </div>

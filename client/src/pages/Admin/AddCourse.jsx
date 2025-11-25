@@ -56,7 +56,7 @@ const AddCourse = () => {
     queryKey: ["course", courseId],
     queryFn: () => coursesAPI.getCourse(courseId),
     enabled: isEditing,
-    retry: 2,
+    retry: 1,
   });
 
   // Define mutation
@@ -107,13 +107,12 @@ const AddCourse = () => {
     },
   });
 
-  // FIXED: Improved initialization with proper question handling
+  // Initialize course data
   useEffect(() => {
     if (isEditing && existingCourse?.data?.course && !isInitialized) {
-      console.log("Initializing form with course data");
+      console.log("Initializing course data:", existingCourse.data.course);
+
       const course = existingCourse.data.course;
-      console.log("Course data:", course);
-      console.log("Course units:", course.units);
 
       // Reset form with course data
       const formData = {
@@ -141,58 +140,38 @@ const AddCourse = () => {
 
       reset(formData);
 
-      // FIXED: Handle units initialization with proper question structure
+      // Handle units initialization
       const courseUnits = course.units || [];
-      console.log("Raw course units:", courseUnits);
+      console.log("Course units found:", courseUnits.length);
 
       if (courseUnits.length > 0) {
         const initializedUnits = courseUnits.map((unit, index) => {
-          console.log(`Processing unit ${index}:`, unit);
-
-          // Ensure unit has basic structure
-          const safeUnit = unit || {};
-
           // Initialize lessons
-          const initializedLessons = (safeUnit.lessons || []).map(
-            (lesson, lessonIndex) => {
-              const safeLesson = lesson || {};
-              return {
-                _id: safeLesson._id,
-                title: safeLesson.title || "",
-                content: safeLesson.content || "",
-                order: safeLesson.order || lessonIndex + 1,
-                duration: safeLesson.duration || 0,
-                videoUrl: safeLesson.videoUrl || "",
-                resources: safeLesson.resources || [],
-                isFree: safeLesson.isFree || false,
-              };
-            }
+          const initializedLessons = (unit.lessons || []).map(
+            (lesson, lessonIndex) => ({
+              _id: lesson._id,
+              title: lesson.title || "",
+              content: lesson.content || "",
+              order: lesson.order || lessonIndex + 1,
+              duration: lesson.duration || 0,
+              videoUrl: lesson.videoUrl || "",
+              resources: lesson.resources || [],
+              isFree: lesson.isFree || false,
+            })
           );
 
-          // FIXED: Properly handle questions initialization
-          const unitQuestions = safeUnit.questions || [];
-          console.log(`Unit ${index} raw questions:`, unitQuestions);
+          // Initialize questions
+          const unitQuestions = unit.questions || [];
+          console.log(`Unit ${index} questions:`, unitQuestions);
 
           const initializedQuestions = unitQuestions.map((question, qIndex) => {
-            const safeQuestion = question || {};
-            console.log(`Processing question ${qIndex}:`, safeQuestion);
-
-            // Determine question type
-            const questionType = safeQuestion.questionType || "multiple_choice";
+            const questionType = question.questionType || "multiple_choice";
 
             // Handle correctAnswer based on question type
-            let correctAnswer = safeQuestion.correctAnswer;
+            let correctAnswer = question.correctAnswer;
+            let options = question.options || [];
 
-            console.log(`Question ${qIndex} type:`, questionType);
-            console.log(
-              `Question ${qIndex} raw correctAnswer:`,
-              correctAnswer,
-              typeof correctAnswer
-            );
-
-            // FIXED: Proper correctAnswer handling for different question types
             if (questionType === "multiple_choice") {
-              // For multiple choice, ensure it's a number (index)
               if (typeof correctAnswer === "string") {
                 correctAnswer = parseInt(correctAnswer);
               }
@@ -201,10 +180,13 @@ const AddCourse = () => {
                 correctAnswer === null ||
                 correctAnswer === undefined
               ) {
-                correctAnswer = 0; // Default to first option
+                correctAnswer = 0;
+              }
+              if (!Array.isArray(options)) options = [];
+              while (options.length < 4) {
+                options.push("");
               }
             } else if (questionType === "true_false") {
-              // For true/false, normalize to "True" or "False"
               if (typeof correctAnswer === "boolean") {
                 correctAnswer = correctAnswer ? "True" : "False";
               } else if (typeof correctAnswer === "string") {
@@ -221,66 +203,43 @@ const AddCourse = () => {
                   correctAnswer = "False";
                 }
               } else {
-                correctAnswer = "True"; // Default
+                correctAnswer = "True";
               }
+              options = [];
             } else if (questionType === "short_answer") {
-              // For short answer, ensure it's a string
               if (typeof correctAnswer !== "string") {
                 correctAnswer = String(correctAnswer || "");
               }
-            }
-
-            // FIXED: Ensure options array has proper structure for multiple choice
-            let options = safeQuestion.options || [];
-            if (questionType === "multiple_choice") {
-              if (!Array.isArray(options)) {
-                options = [];
-              }
-              // Ensure we have at least 4 options
-              while (options.length < 4) {
-                options.push("");
-              }
-            } else {
-              // For non-multiple choice, options should be empty
               options = [];
             }
 
-            const processedQuestion = {
-              _id: safeQuestion._id,
-              question: safeQuestion.question || "",
+            return {
+              _id: question._id,
+              question: question.question || "",
               questionType: questionType,
               options: options,
               correctAnswer: correctAnswer,
-              explanation: safeQuestion.explanation || "",
-              marks: safeQuestion.marks || 1,
-              difficulty: safeQuestion.difficulty || "medium",
-              timeLimit: safeQuestion.timeLimit || 60,
-              image: safeQuestion.image || "",
+              explanation: question.explanation || "",
+              marks: question.marks || 1,
+              difficulty: question.difficulty || "medium",
+              timeLimit: question.timeLimit || 60,
+              image: question.image || "",
             };
-
-            console.log(`Processed question ${qIndex}:`, processedQuestion);
-            return processedQuestion;
           });
 
-          const processedUnit = {
-            _id: safeUnit._id,
-            title: safeUnit.title || "",
-            description: safeUnit.description || "",
-            order: safeUnit.order || index + 1,
-            duration: safeUnit.duration || 0,
+          return {
+            _id: unit._id,
+            title: unit.title || "",
+            description: unit.description || "",
+            order: unit.order || index + 1,
+            duration: unit.duration || 0,
             lessons: initializedLessons,
             questions: initializedQuestions,
           };
-
-          console.log(`Processed unit ${index}:`, processedUnit);
-          return processedUnit;
         });
 
-        console.log("Final initialized units:", initializedUnits);
         setUnits(initializedUnits);
       } else {
-        // Add empty unit if no units exist
-        console.log("No units found, creating empty unit");
         setUnits([
           {
             title: "",
@@ -299,9 +258,7 @@ const AddCourse = () => {
       }
 
       setIsInitialized(true);
-      console.log("Form initialization completed");
     } else if (!isEditing && !isInitialized) {
-      // For new course, ensure we have at least one unit
       if (units.length === 0) {
         setUnits([
           {
@@ -387,7 +344,6 @@ const AddCourse = () => {
   const removeUnit = (index) => {
     if (units.length > 1) {
       const newUnits = units.filter((_, i) => i !== index);
-      // Update order numbers
       const updatedUnits = newUnits.map((unit, i) => ({
         ...unit,
         order: i + 1,
@@ -450,13 +406,13 @@ const AddCourse = () => {
     setUnits(newUnits);
   };
 
-  // FIXED: Enhanced Questions Management
+  // Questions Management
   const addQuestion = (unitIndex) => {
     const newQuestion = {
       question: "",
       questionType: "multiple_choice",
-      options: ["", "", "", ""], // Ensure 4 options for multiple choice
-      correctAnswer: 0, // For multiple choice (index)
+      options: ["", "", "", ""],
+      correctAnswer: 0,
       explanation: "",
       marks: 1,
       difficulty: "medium",
@@ -475,7 +431,6 @@ const AddCourse = () => {
     setUnits(newUnits);
   };
 
-  // FIXED: Enhanced updateQuestion to handle question type changes properly
   const updateQuestion = (unitIndex, questionIndex, field, value) => {
     const newUnits = units.map((unit, i) => {
       if (i === unitIndex) {
@@ -483,18 +438,14 @@ const AddCourse = () => {
           if (j === questionIndex) {
             const updatedQuestion = { ...question, [field]: value };
 
-            // FIXED: Handle question type changes
             if (field === "questionType") {
               if (value === "multiple_choice") {
-                // When switching to multiple choice, ensure proper structure
                 updatedQuestion.options = ["", "", "", ""];
                 updatedQuestion.correctAnswer = 0;
               } else if (value === "true_false") {
-                // When switching to true/false
                 updatedQuestion.options = [];
                 updatedQuestion.correctAnswer = "True";
               } else if (value === "short_answer") {
-                // When switching to short answer
                 updatedQuestion.options = [];
                 updatedQuestion.correctAnswer = "";
               }
@@ -513,7 +464,6 @@ const AddCourse = () => {
     setUnits(newUnits);
   };
 
-  // FIXED: Enhanced question option update
   const updateQuestionOption = (
     unitIndex,
     questionIndex,
@@ -588,16 +538,14 @@ const AddCourse = () => {
     setValue("learningOutcomes", newOutcomes);
   };
 
-  // FIXED: Enhanced onSubmit to ensure proper data structure
+  // Form submission
   const onSubmit = async (data) => {
-    // Validate basic fields
     const isValid = await trigger();
     if (!isValid) {
       toast.error("Please fill all required fields correctly");
       return;
     }
 
-    // Validate units
     const validUnits = units.every(
       (unit) => unit.title.trim() && unit.description.trim()
     );
@@ -606,7 +554,6 @@ const AddCourse = () => {
       return;
     }
 
-    // Validate lessons in all units
     const validLessons = units.every((unit) =>
       unit.lessons.every(
         (lesson) => lesson.title.trim() && lesson.content.trim()
@@ -627,7 +574,7 @@ const AddCourse = () => {
         return total + unitDuration;
       }, 0) / 60;
 
-    // FIXED: Prepare course data with proper question structure
+    // Prepare course data
     const courseData = {
       ...data,
       image: data.image || "",
@@ -639,42 +586,62 @@ const AddCourse = () => {
       },
       maxStudents: parseInt(data.maxStudents) || 0,
       units: units.map((unit) => {
-        // FIXED: Process questions to ensure correct data types
         const processedQuestions = unit.questions.map((question) => {
           const processedQuestion = {
-            ...question,
+            question: question.question,
+            questionType: question.questionType,
+            explanation: question.explanation || "",
             marks: parseInt(question.marks) || 1,
+            difficulty: question.difficulty || "medium",
             timeLimit: parseInt(question.timeLimit) || 60,
             image: question.image || "",
           };
 
-          // FIXED: Ensure correctAnswer has proper type based on question type
           if (question.questionType === "multiple_choice") {
+            processedQuestion.options = question.options.filter(
+              (opt) => opt.trim() !== ""
+            );
             processedQuestion.correctAnswer =
               parseInt(question.correctAnswer) || 0;
           } else if (question.questionType === "true_false") {
-            processedQuestion.correctAnswer = String(question.correctAnswer);
+            processedQuestion.options = [];
+            processedQuestion.correctAnswer = question.correctAnswer === "True";
           } else if (question.questionType === "short_answer") {
+            processedQuestion.options = [];
             processedQuestion.correctAnswer = String(
               question.correctAnswer || ""
             );
           }
 
+          if (question._id) {
+            processedQuestion._id = question._id;
+          }
+
           return processedQuestion;
         });
 
+        const unitDuration = unit.lessons.reduce(
+          (sum, lesson) => sum + (parseInt(lesson.duration) || 0),
+          0
+        );
+
         return {
-          ...unit,
-          duration: unit.lessons.reduce(
-            (sum, lesson) => sum + (lesson.duration || 0),
-            0
-          ),
+          title: unit.title,
+          description: unit.description,
+          order: parseInt(unit.order) || 1,
+          duration: unitDuration,
           lessons: unit.lessons.map((lesson) => ({
-            ...lesson,
+            title: lesson.title,
+            content: lesson.content,
+            videoUrl: lesson.videoUrl || "",
             duration: parseInt(lesson.duration) || 0,
             order: parseInt(lesson.order) || 0,
+            resources: lesson.resources || [],
+            isFree: Boolean(lesson.isFree),
+            ...(lesson._id && { _id: lesson._id }),
           })),
           questions: processedQuestions,
+          ...(unit._id && { _id: unit._id }),
         };
       }),
       tags: data.tags
@@ -689,8 +656,6 @@ const AddCourse = () => {
       ),
     };
 
-    console.log("Submitting course data:", courseData);
-    console.log("Questions in first unit:", courseData.units[0]?.questions);
     saveCourseMutation.mutate(courseData);
   };
 
@@ -763,19 +728,6 @@ const AddCourse = () => {
             </p>
           </div>
         </div>
-
-        {/* Debug button - remove in production */}
-        <button
-          type="button"
-          onClick={() => {
-            console.log("All units:", units);
-            console.log("Active unit:", activeUnit);
-            console.log("Active unit questions:", activeUnit.questions);
-          }}
-          className="btn btn-secondary text-xs"
-        >
-          Debug State
-        </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -1108,15 +1060,17 @@ const AddCourse = () => {
                             <h4 className="font-medium text-gray-900 dark:text-white">
                               Lesson {lessonIndex + 1}
                             </h4>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeLesson(activeUnitIndex, lessonIndex)
-                              }
-                              className="text-red-600 hover:text-red-700 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeLesson(activeUnitIndex, lessonIndex)
+                                }
+                                className="text-red-600 hover:text-red-700 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1315,10 +1269,10 @@ const AddCourse = () => {
                                       )
                                     }
                                     className="hidden"
-                                    id={`question-image-${questionIndex}`}
+                                    id={`question-image-${activeUnitIndex}-${questionIndex}`}
                                   />
                                   <label
-                                    htmlFor={`question-image-${questionIndex}`}
+                                    htmlFor={`question-image-${activeUnitIndex}-${questionIndex}`}
                                     className="btn btn-outline cursor-pointer"
                                   >
                                     Choose Image
@@ -1432,7 +1386,7 @@ const AddCourse = () => {
                                       >
                                         <input
                                           type="radio"
-                                          name={`question-${questionIndex}-correct`}
+                                          name={`question-${activeUnitIndex}-${questionIndex}-correct`}
                                           checked={
                                             question.correctAnswer ===
                                             optionIndex
@@ -1480,7 +1434,7 @@ const AddCourse = () => {
                                   <label className="flex items-center">
                                     <input
                                       type="radio"
-                                      name={`question-${questionIndex}-true-false`}
+                                      name={`question-${activeUnitIndex}-${questionIndex}-true-false`}
                                       checked={
                                         question.correctAnswer === "True"
                                       }
@@ -1501,7 +1455,7 @@ const AddCourse = () => {
                                   <label className="flex items-center">
                                     <input
                                       type="radio"
-                                      name={`question-${questionIndex}-true-false`}
+                                      name={`question-${activeUnitIndex}-${questionIndex}-true-false`}
                                       checked={
                                         question.correctAnswer === "False"
                                       }
