@@ -13,6 +13,7 @@ import {
   authenticate,
   requireAdmin,
   authenticateWithImage,
+  optionalAuth,
 } from "../middleware/auth.js";
 import { validateCourse } from "../middleware/validation.js";
 
@@ -20,7 +21,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getCourses);
-router.get("/:id", getCourse);
+router.get("/:id", optionalAuth, getCourse);
 router.get("/:courseId/demo-questions", getDemoQuestions);
 
 // Protected routes
@@ -32,14 +33,15 @@ router.post(
   validateCourse,
   createCourse
 );
+
 router.put(
   "/:id",
   authenticate,
-  requireAdmin,
   authenticateWithImage("image"),
   validateCourse,
   updateCourse
 );
+
 router.delete("/:id", authenticate, requireAdmin, deleteCourse);
 router.post("/:courseId/enroll", authenticate, enrollCourse);
 router.post("/:courseId/rate", authenticate, rateCourse);

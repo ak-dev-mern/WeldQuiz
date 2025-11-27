@@ -8,6 +8,10 @@ import {
   CheckCircle,
   PlayCircle,
   ArrowLeft,
+  HelpCircle,
+  X,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { coursesAPI } from "../../services/api";
 
@@ -16,16 +20,19 @@ const PublicCourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [demoQuestions, setDemoQuestions] = useState([]);
+  const [showDemoQuiz, setShowDemoQuiz] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await coursesAPI.getCourse(id);
-
-        // Fix: Use course (singular) instead of courses (plural)
         setCourse(response?.data?.course || response?.data);
       } catch (err) {
         console.error("Error fetching course:", err);
@@ -39,6 +46,71 @@ const PublicCourseDetail = () => {
       fetchCourse();
     }
   }, [id]);
+
+  const fetchDemoQuestions = async () => {
+    try {
+      setLoadingQuestions(true);
+      const response = await coursesAPI.getDemoQuestions(id);
+      setDemoQuestions(response?.data?.questions || response?.data || []);
+      setShowDemoQuiz(true);
+      setCurrentQuestionIndex(0);
+      setSelectedAnswers({});
+      setQuizSubmitted(false);
+    } catch (err) {
+      console.error("Error fetching demo questions:", err);
+      setError("Failed to load demo questions. Please try again later.");
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+
+  const handleAnswerSelect = (questionId, answerIndex) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionId]: answerIndex,
+    }));
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < demoQuestions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleSubmitQuiz = () => {
+    setQuizSubmitted(true);
+  };
+
+  const handleRestartQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setQuizSubmitted(false);
+  };
+
+  const handleCloseQuiz = () => {
+    setShowDemoQuiz(false);
+    setDemoQuestions([]);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setQuizSubmitted(false);
+  };
+
+  const calculateScore = () => {
+    let correctAnswers = 0;
+    demoQuestions.forEach((question) => {
+      const selectedAnswer = selectedAnswers[question._id || question.id];
+      if (selectedAnswer === question.correctAnswer) {
+        correctAnswers++;
+      }
+    });
+    return correctAnswers;
+  };
 
   // Helper function to get display price
   const getDisplayPrice = (price) => {
@@ -54,6 +126,167 @@ const PublicCourseDetail = () => {
   const getAvatarUrl = (avatarPath) => {
     if (!avatarPath) return "/default-avatar.png";
     return `${import.meta.env.VITE_SOCKET_URL}${avatarPath}`;
+  };
+
+  // Demo Quiz Modal Component
+  const DemoQuizModal = () => {
+    if (!showDemoQuiz || !demoQuestions.length) return null;
+
+    const currentQuestion = demoQuestions[currentQuestionIndex];
+    const isLastQuestion = currentQuestionIndex === demoQuestions.length - 1;
+    const selectedAnswer =
+      selectedAnswers[currentQuestion._id || currentQuestion.id];
+
+    if (quizSubmitted) {
+      const score = calculateScore();
+      const totalQuestions = demoQuestions.length;
+      const percentage = Math.round((score / totalQuestions) * 100);
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Quiz Completed!
+              </h2>
+              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                {score}/{totalQuestions}
+              </div>
+              <div className="text-lg text-gray-600 dark:text-gray-300 mb-4">
+                {percentage >= 70 ? "Great job! 🎉" : "Keep practicing! 💪"}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                {percentage >= 80 &&
+                  "Excellent! You have a good understanding of this topic."}
+                {percentage >= 60 &&
+                  percentage < 80 &&
+                  "Good job! You're on the right track."}
+                {percentage < 60 &&
+                  "Don't worry! Review the material and try again."}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRestartQuiz}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={handleCloseQuiz}
+                  className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 py-3 px-4 rounded-lg font-semibold transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dark-700">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Demo Quiz
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Question {currentQuestionIndex + 1} of {demoQuestions.length}
+              </p>
+            </div>
+            <button
+              onClick={handleCloseQuiz}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Question */}
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              {currentQuestion.question}
+            </h3>
+
+            {/* Options */}
+            <div className="space-y-3">
+              {currentQuestion.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() =>
+                    handleAnswerSelect(
+                      currentQuestion._id || currentQuestion.id,
+                      index
+                    )
+                  }
+                  className={`w-full text-left p-4 rounded-lg border transition-all ${
+                    selectedAnswer === index
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
+                      : "border-gray-200 dark:border-dark-600 hover:border-gray-300 dark:hover:border-dark-500"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                        selectedAnswer === index
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    >
+                      {selectedAnswer === index && (
+                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                      )}
+                    </div>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {option}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-dark-700">
+            <button
+              onClick={handlePrevQuestion}
+              disabled={currentQuestionIndex === 0}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+
+            <div className="flex items-center gap-3">
+              {!isLastQuestion ? (
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={selectedAnswer === undefined}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmitQuiz}
+                  disabled={selectedAnswer === undefined}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Submit Quiz
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -179,6 +412,33 @@ const PublicCourseDetail = () => {
                     </div>
                     <div className="font-semibold text-gray-900 dark:text-white">
                       {course.level || "All Levels"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Demo Quiz Section */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
+                  <div className="flex items-start gap-4">
+                    <HelpCircle className="h-8 w-8 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Test Your Knowledge
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        Take our free demo quiz to see what you'll learn in this
+                        course. No registration required - just test your
+                        current knowledge!
+                      </p>
+                      <button
+                        onClick={fetchDemoQuestions}
+                        disabled={loadingQuestions}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                      >
+                        <HelpCircle className="h-5 w-5" />
+                        {loadingQuestions
+                          ? "Loading Questions..."
+                          : "Start Demo Quiz"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -316,6 +576,9 @@ const PublicCourseDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Demo Quiz Modal */}
+      <DemoQuizModal />
     </div>
   );
 };

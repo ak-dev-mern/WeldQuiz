@@ -95,10 +95,9 @@ export const getCourse = async (req, res) => {
       .populate("ratings.user", "username profile");
 
     if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     const courseData = course.toObject();
@@ -111,39 +110,34 @@ export const getCourse = async (req, res) => {
         })
       : false;
 
-    // FIXED: Check for admin role AND instructor ownership
-const isAdmin =
-  req.user && (req.user.role === "admin" || req.user.role === "instructor");
+    const isAdmin = req.user && req.user.role === "admin";
+
+    // Safe instructor check
     const isInstructor =
-      req.user && course.instructor._id.toString() === req.user._id.toString();
+      req.user &&
+      course.instructor &&
+      course.instructor._id &&
+      req.user._id &&
+      course.instructor._id.toString() === req.user._id.toString();
 
     console.log(`Course Access Debug:
-      User ID: ${req.user?._id}
-      User Role: ${req.user?.role}
-      Is Admin: ${isAdmin}
-      Is Instructor: ${isInstructor}
-      Is Enrolled: ${isEnrolled}
-      Course Instructor: ${course.instructor._id}
-    `);
+  User ID: ${req.user?._id}
+  User Role: ${req.user?.role}
+  Is Admin: ${isAdmin}
+  Is Instructor: ${isInstructor}
+  Is Enrolled: ${isEnrolled}
+  Course Instructor: ${course.instructor?._id}
+`);
 
-    // FIXED: Show ALL questions for admin users and course instructors
-    if (isAdmin || isInstructor) {
-      console.log("Showing ALL questions for admin/instructor");
-      // No filtering - return complete course data
-    } else if (isEnrolled) {
-      console.log("Showing ALL questions for enrolled student");
-      // No filtering - enrolled students see all questions
-    } else {
-      // Non-enrolled, non-admin users only see free lessons and no questions
-      console.log("Hiding questions for non-enrolled student");
+    // Filter questions for non-enrolled users
+    if (!(isAdmin || isInstructor || isEnrolled)) {
       courseData.units = courseData.units.map((unit) => ({
         ...unit,
         lessons: unit.lessons.filter((lesson) => lesson.isFree),
-        questions: [], // Hide questions
+        questions: [], // hide questions
       }));
     }
 
-    // Log final question count for debugging
     const totalQuestions = courseData.units.reduce(
       (total, unit) => total + (unit.questions?.length || 0),
       0
@@ -170,7 +164,10 @@ const isAdmin =
 
 export const updateCourse = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await Course.findById(req.params.id).populate(
+      "instructor",
+      "username profile"
+    );
 
     if (!course) {
       return res.status(404).json({
@@ -179,12 +176,17 @@ export const updateCourse = async (req, res) => {
       });
     }
 
-    // Check if user is instructor or admin
-    if (
-      !req.user ||
-      (course.instructor._id.toString() !== req.user._id.toString() &&
-        req.user.role !== "admin")
-    ) {
+    // Safe check for instructor ownership
+    const isInstructor =
+      req.user &&
+      course.instructor &&
+      course.instructor._id &&
+      req.user._id &&
+      course.instructor._id.toString() === req.user._id.toString();
+
+    const isAdmin = req.user && req.user.role === "admin";
+
+    if (!req.user || (!isInstructor && !isAdmin)) {
       return res.status(403).json({
         success: false,
         message:

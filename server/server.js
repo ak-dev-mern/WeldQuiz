@@ -84,6 +84,7 @@ const corsOptions = {
   maxAge: 86400, // 24 hours
   preflightContinue: false,
   optionsSuccessStatus: 204,
+  credentials: true, // ✅ must be true to allow cookies
 };
 
 // Socket.io configuration with enhanced CORS

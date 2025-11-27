@@ -29,6 +29,7 @@ const AddCourse = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = !!courseId;
+  const cleanQuestion = typeof question === "object" ? question : {};
 
   // State declarations
   const [imagePreview, setImagePreview] = useState(null);
@@ -436,14 +437,17 @@ const AddCourse = () => {
       if (i === unitIndex) {
         const updatedQuestions = unit.questions.map((question, j) => {
           if (j === questionIndex) {
-            const updatedQuestion = { ...question, [field]: value };
+            const q =
+              typeof question === "object" ? { ...question } : { options: [] };
+
+            const updatedQuestion = { ...q, [field]: value };
 
             if (field === "questionType") {
               if (value === "multiple_choice") {
-                updatedQuestion.options = ["", "", "", ""];
+                updatedQuestion.options = ["", "", "", ""]; // exactly 4 options
                 updatedQuestion.correctAnswer = 0;
               } else if (value === "true_false") {
-                updatedQuestion.options = [];
+                updatedQuestion.options = ["True", "False"];
                 updatedQuestion.correctAnswer = "True";
               } else if (value === "short_answer") {
                 updatedQuestion.options = [];
@@ -474,19 +478,22 @@ const AddCourse = () => {
       i === unitIndex
         ? {
             ...unit,
-            questions: unit.questions.map((question, j) =>
-              j === questionIndex
-                ? {
-                    ...question,
-                    options: question.options.map((opt, k) =>
-                      k === optionIndex ? value : opt
-                    ),
-                  }
-                : question
-            ),
+            questions: unit.questions.map((question, j) => {
+              if (j !== questionIndex) return question;
+
+              // ✅ FIX: Make sure question is always a valid object
+              const q =
+                typeof question === "object"
+                  ? { ...question }
+                  : { options: [] };
+              const options = Array.isArray(q.options) ? [...q.options] : [];
+              options[optionIndex] = value;
+              return { ...q, options };
+            }),
           }
         : unit
     );
+
     setUnits(newUnits);
   };
 

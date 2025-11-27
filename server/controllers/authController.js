@@ -24,10 +24,10 @@ const setTokenCookies = (res, accessToken, refreshToken) => {
 
     // For local development
     const cookieOptions = {
-      httpOnly: true,
-      secure: false, // Must be false for localhost
-      sameSite: "lax", // Use 'lax' for local development
-      path: "/",
+      httpOnly: true, // ✅ prevents JS access (safer)
+      secure: false, // ✅ must be false for localhost
+      sameSite: "lax", // ✅ allows cross-origin requests from frontend
+      path: "/", // ✅ root path
     };
 
     // Set access token cookie (15 minutes)

@@ -7,56 +7,40 @@ const API_BASE_URL =
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
+  withCredentials: true, // ✅ ensures cookies are sent automatically
   timeout: 30000,
 });
 
-// Request interceptor to add auth token
+// Remove Authorization header logic since backend reads cookies
+// You don't need a request interceptor for auth anymore
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (config) => config,
+  (error) => Promise.reject(error)
 );
 
-// api.js - Update response interceptor
+// Response interceptor for handling errors and token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Don't retry if it's a 401 and we're already retrying
+    // Retry once on 401 by refreshing token (if backend supports refresh-token cookie)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh-token`,
-          {},
-          { withCredentials: true }
-        );
-
-        const { accessToken } = response.data;
-        localStorage.setItem("accessToken", accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
+        await api.post("/auth/refresh-token"); // refresh via cookie
+        return api(originalRequest); // retry original request
       } catch (refreshError) {
-        // Don't redirect if we're already on login page
+        // Redirect to login if refresh fails
         if (!window.location.pathname.includes("/login")) {
-          localStorage.removeItem("accessToken");
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);
       }
     }
 
-    // Handle rate limiting - don't show toast for auth requests during logout
+    // Handle rate limiting
     if (error.response?.status === 429) {
       const isAuthRequest = originalRequest.url.includes("/auth/");
       if (!isAuthRequest) {
@@ -83,9 +67,7 @@ export const authAPI = {
   refreshToken: () => api.post("/auth/refresh-token"),
   uploadUserImage: (formData) =>
     api.post("/auth/upload-image", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     }),
   removeProfileImage: () => api.delete("/auth/profile/image"),
 };
