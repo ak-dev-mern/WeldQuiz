@@ -7,53 +7,118 @@ const API_BASE_URL =
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // ✅ ensures cookies are sent automatically
+  withCredentials: true,
   timeout: 30000,
 });
 
-// Remove Authorization header logic since backend reads cookies
-// You don't need a request interceptor for auth anymore
+// Track refresh token attempts to prevent loops
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+// Function to add subscribers
+const addSubscriber = (callback) => {
+  refreshSubscribers.push(callback);
+};
+
+// Function to execute all subscribers
+const executeSubscribers = (token) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+// Request counter for rate limiting
+let requestCount = 0;
+const MAX_REQUESTS_PER_MINUTE = 30; // Reduced from 60
+
+// Request interceptor - simplified
 api.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    requestCount++;
+
+    // Simple client-side rate limiting
+    if (requestCount > MAX_REQUESTS_PER_MINUTE) {
+      console.warn("Rate limit approaching - slowing requests");
+      return Promise.reject(new Error("Too many requests"));
+    }
+
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling errors and token refresh
+// Response interceptor - FIXED to prevent loops
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
-    // Retry once on 401 by refreshing token (if backend supports refresh-token cookie)
+    // Handle 429 - Rate Limiting
+    if (error.response?.status === 429) {
+      const isAuthRequest = originalRequest.url.includes("/auth/");
+      if (!isAuthRequest) {
+        toast.error("Too many requests. Please wait a moment.");
+      }
+      return Promise.reject(error);
+    }
+
+    // Handle 401 - Token Refresh (FIXED)
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, wait for the new token
+        return new Promise((resolve) => {
+          addSubscriber((token) => {
+            originalRequest._retry = true;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        await api.post("/auth/refresh-token"); // refresh via cookie
-        return api(originalRequest); // retry original request
+        // Attempt to refresh token
+        await api.post("/auth/refresh-token");
+
+        // Execute all waiting requests
+        executeSubscribers();
+
+        // Retry the original request
+        return api(originalRequest);
       } catch (refreshError) {
-        // Redirect to login if refresh fails
+        // Refresh failed - redirect to login
+        console.error("Token refresh failed:", refreshError);
+
+        // Execute subscribers with error
+        executeSubscribers();
+
+        // Only redirect if not already on login page
         if (!window.location.pathname.includes("/login")) {
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
-    // Handle rate limiting
-    if (error.response?.status === 429) {
-      const isAuthRequest = originalRequest.url.includes("/auth/");
-      if (!isAuthRequest) {
-        toast.error("Too many requests. Please slow down.");
-      }
-      return Promise.reject(error);
+    // Handle other errors
+    if (error.response?.status >= 500) {
+      toast.error("Server error. Please try again later.");
     }
 
     return Promise.reject(error);
   }
 );
 
-// API methods organized by feature
+// Reset request counter every minute
+setInterval(() => {
+  requestCount = 0;
+}, 60000);
+
+// API methods with optimized error handling
 export const authAPI = {
   login: (credentials) => api.post("/auth/login", credentials),
   register: (userData) => api.post("/auth/register", userData),
@@ -86,23 +151,6 @@ export const coursesAPI = {
   getCourseRatings: (courseId) => api.get(`/courses/${courseId}/ratings`),
 };
 
-export const examsAPI = {
-  startExam: (courseId, unitId, isDemo = false) =>
-    api.post(`/exams/${courseId}/${unitId}/start${isDemo ? "?demo=true" : ""}`),
-  submitExam: (courseId, unitId, examData) =>
-    api.post(`/exams/${courseId}/${unitId}/submit`, examData),
-  getExamResults: (params) => api.get("/exams/results", { params }),
-  getExamAnalytics: () => api.get("/exams/analytics"),
-};
-
-export const paymentsAPI = {
-  createSubscription: (subscriptionData) =>
-    api.post("/payments/create-subscription", subscriptionData),
-  cancelSubscription: () => api.post("/payments/cancel-subscription"),
-  getPaymentHistory: (params) => api.get("/payments/history", { params }),
-  getSubscriptionStatus: () => api.get("/payments/subscription-status"),
-};
-
 export const adminAPI = {
   getDashboardStats: () => api.get("/admin/dashboard/stats"),
   getUsers: (params) => api.get("/admin/users", { params }),
@@ -118,9 +166,24 @@ export const adminAPI = {
     api.get("/admin/courses/analytics", { params }),
   getPayments: (params) => api.get("/admin/payments", { params }),
   getRevenueStats: (params) => api.get("/admin/revenue/stats", { params }),
-  getUserPreferences: () => api.get("/users/preferences"),
-  updateUserPreferences: (data) => api.put("/users/preferences", data),
-  getAchievements: () => api.get("/users/achievements"),
+};
+
+// Other APIs remain the same...
+export const examsAPI = {
+  startExam: (courseId, unitId, isDemo = false) =>
+    api.post(`/exams/${courseId}/${unitId}/start${isDemo ? "?demo=true" : ""}`),
+  submitExam: (courseId, unitId, examData) =>
+    api.post(`/exams/${courseId}/${unitId}/submit`, examData),
+  getExamResults: (params) => api.get("/exams/results", { params }),
+  getExamAnalytics: () => api.get("/exams/analytics"),
+};
+
+export const paymentsAPI = {
+  createSubscription: (subscriptionData) =>
+    api.post("/payments/create-subscription", subscriptionData),
+  cancelSubscription: () => api.post("/payments/cancel-subscription"),
+  getPaymentHistory: (params) => api.get("/payments/history", { params }),
+  getSubscriptionStatus: () => api.get("/payments/subscription-status"),
 };
 
 export const discussionsAPI = {

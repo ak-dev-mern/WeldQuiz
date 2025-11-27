@@ -18,13 +18,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  // Check authentication status by attempting to fetch profile
+  // Optimized user query with better error handling
   const {
     data: userData,
-    isLoading,
+    isLoading: isQueryLoading,
     error,
     refetch: refetchUser,
-    isFetching,
   } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -32,145 +31,139 @@ export const AuthProvider = ({ children }) => {
         const response = await authAPI.getProfile();
         return response.data.user;
       } catch (error) {
-        // Don't throw error for 401 - just return null
-        if (error.response?.status === 401) {
+        // Don't throw for auth or rate limit errors
+        if (error.response?.status === 401 || error.response?.status === 429) {
           return null;
         }
+        // For other errors, wait and retry once
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         throw error;
       }
     },
     retry: (failureCount, error) => {
-      // Don't retry on 401 errors
-      if (error.response?.status === 401) {
+      // Only retry once and never for 401/429
+      if (error.response?.status === 401 || error.response?.status === 429) {
         return false;
       }
-      // Retry other errors only once
       return failureCount < 1;
     },
-    retryDelay: 1000,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes cache time
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    retryDelay: 2000,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
+  // Handle errors globally
   useEffect(() => {
-    if (!isLoading && !isFetching) {
+    if (error) {
+      if (error.response?.status === 429) {
+        console.warn("Rate limit hit in user query");
+      }
+    }
+  }, [error]);
+
+  // Sync state with query data
+  useEffect(() => {
+    if (!isQueryLoading) {
       setUser(userData || null);
       setLoading(false);
     }
-  }, [userData, isLoading, isFetching]);
+  }, [userData, isQueryLoading]);
 
   const login = async (credentials) => {
     try {
+      // Clear cache first
+      queryClient.removeQueries(["user"]);
+
       const response = await authAPI.login(credentials);
       const { user } = response.data;
 
-      console.log(user);
-      
-
-      setUser(user);
-
-      // Refetch user data to ensure we have latest
-      await refetchUser();
+      // Update cache directly
+      queryClient.setQueryData(["user"], user);
 
       toast.success("Login successful!");
       return response.data;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      if (error.response?.status === 429) {
+        toast.error("Too many login attempts. Please wait 1 minute.");
+      } else {
+        toast.error(error.response?.data?.message || "Login failed");
+      }
       throw error;
     }
   };
 
   const register = async (userData) => {
     try {
+      queryClient.removeQueries(["user"]);
+
       const response = await authAPI.register(userData);
       const { user } = response.data;
 
-      setUser(user);
-
-      // Refetch user data to ensure we have latest
-      await refetchUser();
+      queryClient.setQueryData(["user"], user);
 
       toast.success("Registration successful!");
       return response.data;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Registration failed");
+      if (error.response?.status === 429) {
+        toast.error("Too many registration attempts. Please wait 1 minute.");
+      } else {
+        toast.error(error.response?.data?.message || "Registration failed");
+      }
       throw error;
     }
   };
 
-  // AuthContext.jsx - Fix the logout function
   const logout = async () => {
     try {
-      // Cancel all pending queries
-      queryClient.cancelQueries();
-
-      // Clear all queries from cache FIRST
-      queryClient.removeQueries();
-      queryClient.clear();
-
-      // Clear user state
+      // Clear state immediately
       setUser(null);
+      setLoading(false);
 
-      // Make logout API call
-      await authAPI.logout();
-    } catch (error) {
-      console.error("Logout API call failed:", error);
-      // Continue with logout even if API call fails
-    } finally {
+      // Clear all queries
+      queryClient.removeQueries();
+
+      // Make logout call (fire and forget)
+      authAPI.logout().catch(console.error);
+
       toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still clear everything
+      setUser(null);
+      queryClient.removeQueries();
     }
   };
+
   const updateProfile = async (profileData) => {
     try {
       const response = await authAPI.updateProfile(profileData);
       const updatedUser = response.data.user;
 
-      setUser(updatedUser);
-
-      // Update the query cache
       queryClient.setQueryData(["user"], updatedUser);
 
       toast.success("Profile updated successfully");
       return response.data;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Profile update failed");
-      throw error;
-    }
-  };
-
-  const changePassword = async (passwordData) => {
-    try {
-      await authAPI.changePassword(passwordData);
-      toast.success("Password changed successfully");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Password change failed");
-      throw error;
-    }
-  };
-
-  // Refresh token is now handled automatically by the browser via httpOnly cookies
-  const refreshToken = async () => {
-    try {
-      // This will automatically use the refresh token cookie
-      const response = await authAPI.refreshToken();
-      return response.data.accessToken;
-    } catch (error) {
-      // If refresh fails, logout the user
-      await logout();
+      if (error.response?.status === 429) {
+        toast.error("Too many update requests. Please wait a moment.");
+      } else {
+        toast.error(error.response?.data?.message || "Profile update failed");
+      }
       throw error;
     }
   };
 
   const value = {
     user,
-    loading,
+    loading: loading || isQueryLoading,
     login,
     register,
     logout,
     updateProfile,
-    changePassword,
-    refreshToken,
+    refetchUser,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
   };

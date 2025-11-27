@@ -10,6 +10,7 @@ import {
   Eye,
   Plus,
   BookOpen,
+  FileText,
 } from "lucide-react";
 import LoadingSpinner from "../../components/UI/LoadingSpinner";
 import EmptyState from "../../components/UI/EmptyState";
@@ -33,6 +34,8 @@ const AdminCourses = () => {
     queryKey: ["admin-courses", filters],
     queryFn: () => adminAPI.getCourses(filters),
   });
+
+    console.log(courses);
 
   const updateCourseStatusMutation = useMutation({
     mutationFn: ({ courseId, status }) =>
@@ -90,8 +93,12 @@ const AdminCourses = () => {
     setSelectedCourse(null);
   };
 
-  const handleEditCourse = (courseId) => {
+  const handleEditCourseDetails = (courseId) => {
     navigate(`/dashboard/admin/edit-course/${courseId}`);
+  };
+
+  const handleManageCourseContent = (courseId) => {
+    navigate(`/dashboard/admin/course-content/${courseId}`);
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -184,7 +191,8 @@ const AdminCourses = () => {
                   onStatusToggle={handleStatusToggle}
                   onDelete={handleDeleteCourse}
                   onViewDetails={openDetailModal}
-                  onEdit={handleEditCourse}
+                  onEditDetails={handleEditCourseDetails}
+                  onManageContent={handleManageCourseContent}
                 />
               ))}
             </tbody>
@@ -238,7 +246,7 @@ const AdminCourses = () => {
         <CourseDetailModal
           course={selectedCourse}
           onClose={closeDetailModal}
-          onEdit={handleEditCourse}
+          onEdit={handleEditCourseDetails}
           onStatusToggle={handleStatusToggle}
         />
       )}

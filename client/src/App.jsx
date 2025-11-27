@@ -18,6 +18,7 @@ import PublicLayout from "./components/Layout/PublicLayout";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import AdminRoute from "./components/Auth/AdminRoute";
 import PageLoader from "./components/UI/PageLoader";
+import CourseContentManager from "./pages/Admin/components/CourseContentManager";
 
 // Public Pages (Lazy loaded)
 const Home = React.lazy(() => import("./pages/Common/Home"));
@@ -108,7 +109,10 @@ function App() {
                     <Route path="about" element={<About />} />
                     <Route path="contact" element={<Contact />} />
                     <Route path="courses" element={<PublicCourses />} />
-                    <Route path="courses/:id" element={<PublicCourseDetail />} />
+                    <Route
+                      path="courses/:id"
+                      element={<PublicCourseDetail />}
+                    />
                   </Route>
 
                   {/* Protected Routes with Dashboard Layout (No Footer) */}
@@ -167,6 +171,10 @@ function App() {
                           <AddCourse />
                         </AdminRoute>
                       }
+                    />
+                    <Route
+                      path="admin/course-content/:courseId"
+                      element={<CourseContentManager />}
                     />
 
                     <Route

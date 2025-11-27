@@ -1,3 +1,4 @@
+// components/admin/courses/CourseRow.jsx
 import React from "react";
 import {
   Edit2,
@@ -5,9 +6,8 @@ import {
   Eye,
   Users,
   Star,
-  PlayCircle,
+  BookOpen,
   FileText,
-  Clock,
 } from "lucide-react";
 import getAvatarUrl from "../../../hooks/useGetAvatarUrl";
 
@@ -16,7 +16,8 @@ const CourseRow = ({
   onStatusToggle,
   onDelete,
   onViewDetails,
-  onEdit,
+  onEditDetails,
+  onManageContent,
 }) => {
   // Get total lessons from units
   const getTotalLessons = () => {
@@ -117,10 +118,17 @@ const CourseRow = ({
           </button>
           <button
             className="p-1 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
-            onClick={() => onEdit(course._id)}
-            title="Edit Course"
+            onClick={() => onEditDetails(course._id)}
+            title="Edit Course Details"
           >
-            <Edit2 className="h-4 w-4" />
+            <BookOpen className="h-4 w-4" />
+          </button>
+          <button
+            className="p-1 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            onClick={() => onManageContent(course._id)}
+            title="Manage Course Content"
+          >
+            <FileText className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(course._id)}
