@@ -8,7 +8,7 @@ const API_BASE_URL =
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 30000,
+  timeout: 50000,
 });
 
 // Track refresh token attempts to prevent loops
@@ -153,13 +153,13 @@ export const coursesAPI = {
 
 export const adminAPI = {
   getDashboardStats: () => api.get("/admin/dashboard/stats"),
-  getUsers: (params) => api.get("/admin/users", { params }),
+  getUsers: (params = {}) => api.get("/admin/users", { params }),
   getUserById: (userId) => api.get(`/admin/users/${userId}`),
   updateUser: (userId, userData) => api.put(`/admin/users/${userId}`, userData),
   updateUserStatus: (userId, statusData) =>
     api.patch(`/admin/users/${userId}/status`, statusData),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
-  getCourses: (params) => api.get("/admin/courses", { params }),
+  getCourses: (params = {}) => api.get("/admin/courses", { params }),
   updateCourseStatus: (courseId, statusData) =>
     api.patch(`/admin/courses/${courseId}/status`, statusData),
   getCourseAnalytics: (params) =>
@@ -194,7 +194,7 @@ export const discussionsAPI = {
   addReply: (discussionId, replyData) =>
     api.post(`/discussions/${discussionId}/replies`, replyData),
   voteDiscussion: (discussionId, voteType) =>
-    api.post(`/discussions/${discussionId}/vote`, { voteType }),
+    api.post(`/discussions/${discussionId}/vote`, { voteType: voteType || "" }),
 };
 
 export const feedbackAPI = {

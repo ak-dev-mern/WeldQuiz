@@ -27,16 +27,10 @@ import { authLimiter, sensitiveLimiter } from "../middleware/security.js";
 const router = express.Router();
 
 // Public routes with rate limiting
-router.post(
-  "/register",
-  authLimiter,
-  validateRegister,
-  uploadSingleImage("image"),
-  register
-);
+router.post("/register", authLimiter, validateRegister, register);
 router.post("/login", authLimiter, validateLogin, login);
 router.post(
-  "/forgot-password",
+  "/forgot-password", 
   authLimiter,
   validateForgotPassword,
 
@@ -57,7 +51,7 @@ router.put(
   "/profile",
   authenticate,
   validateUpdateProfile,
-  uploadSingleImage("avatar"),
+  // uploadSingleImage("avatar"),
   updateProfile
 );
 router.put(

@@ -22,6 +22,8 @@ const PublicCourses = () => {
           status: "published",
         });
 
+        console.log(response?.data?.courses);
+
         setCourses(response?.data?.courses || response?.data || []);
       } catch (err) {
         console.error("Error fetching courses:", err);
@@ -187,17 +189,9 @@ const PublicCourses = () => {
                   >
                     <div className="relative overflow-hidden">
                       <img
-                        src={
-                          course.image ||
-                          course.thumbnail ||
-                          "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=250&fit=crop"
-                        }
+                        src={course.image || course.thumbnail}
                         alt={course.title}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.src =
-                            "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=250&fit=crop";
-                        }}
                       />
                       <div className="absolute top-4 right-4">
                         <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -226,7 +220,7 @@ const PublicCourses = () => {
                       <div className="space-y-3 mb-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Clock className="h-4 w-4 flex-shrink-0" />
-                          <span>{course.duration || "Self-paced"}</span>
+                          <span>{course.duration || "Self-paced"} hrs</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Users className="h-4 w-4 flex-shrink-0" />

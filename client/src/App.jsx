@@ -76,7 +76,7 @@ const HomeRedirect = () => {
 
   // If user is logged in, redirect to dashboard
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Home />;
   }
 
   // If not logged in, show public home page

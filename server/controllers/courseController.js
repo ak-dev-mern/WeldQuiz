@@ -64,10 +64,13 @@ export const getCourses = async (req, res) => {
 
     // FIXED: Remove populate for embedded documents
     const courses = await Course.find(filter)
-      .populate("instructor", "username profile")
+      .select(
+        "title category instructor averageRating totalLessons totalQuestions isActive image thumbnail price duration"
+      )
+      .populate("instructor", "username email profile.avatar")
       .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     const total = await Course.countDocuments(filter);
 

@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -12,6 +13,8 @@ import {
   sensitiveLimiter,
   discussionLimiter,
   generalLimiter,
+  securityHeaders,
+  xssProtection,
 } from "./middleware/security.js";
 import path from "path";
 
@@ -29,13 +32,13 @@ import activityRoutes from "./routes/activities.js";
 // Import middleware
 import errorHandler from "./middleware/errorHandler.js";
 import { logger } from "./middleware/logger.js";
-import { securityHeaders, xssProtection } from "./middleware/security.js";
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
+// Serve uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Enhanced CORS configuration
@@ -49,15 +52,15 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl requests)
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
+    const allowed = allowedOrigins.includes(origin);
+    if (!allowed) {
+      // don't throw an error — return false so browser receives a clean CORS refusal
       console.warn(`Blocked by CORS: ${origin}`);
-      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
+    return callback(null, allowed);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -84,12 +87,18 @@ const corsOptions = {
   maxAge: 86400, // 24 hours
   preflightContinue: false,
   optionsSuccessStatus: 204,
-  credentials: true, // ✅ must be true to allow cookies
 };
 
 // Socket.io configuration with enhanced CORS
 const io = new Server(httpServer, {
-  cors: corsOptions,
+  cors: {
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      callback(null, allowedOrigins.includes(origin));
+    },
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
   transports: ["websocket", "polling"],
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -107,7 +116,8 @@ app.use(
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         scriptSrc: ["'self'"],
-        connectSrc: ["'self'", "ws:", "wss:", "blob:"],
+        // include backend API origins so browser connectSrc rules allow API/socket requests
+        connectSrc: ["'self'", "ws:", "wss:", "blob:", ...allowedOrigins],
         mediaSrc: ["'self'", "data:", "https:"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
@@ -126,39 +136,50 @@ app.use(
 app.use(securityHeaders);
 app.use(xssProtection);
 app.use(cors(corsOptions));
+
+// Safe JSON body parser — allow empty bodies & validate when present
 app.use(
   express.json({
     limit: "10mb",
     verify: (req, res, buf) => {
+      // allow empty body (GET/DELETE often have no body)
+      if (!buf || buf.length === 0) return;
+
       try {
         JSON.parse(buf);
       } catch (e) {
+        // send nice error and abort parsing
         res.status(400).json({
           success: false,
           message: "Invalid JSON payload",
         });
-        throw new Error("Invalid JSON");
+        throw new Error("Invalid JSON payload");
       }
     },
   })
 );
+
 app.use(
   express.urlencoded({
     extended: true,
     limit: "10mb",
   })
 );
+
 app.use(cookieParser());
 app.use(logger);
 
-// Apply rate limiting with specific rules
+// Apply rate limiting with specific rules (less aggressive for general API)
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api/discussions", discussionLimiter);
 app.use("/api/auth/forgot-password", sensitiveLimiter);
 app.use("/api/auth/reset-password", sensitiveLimiter);
 app.use("/api/auth/change-password", sensitiveLimiter);
-app.use("/api/", apiLimiter);
+
+// Use a general limiter for API rather than an overly aggressive global limiter.
+// You can tune this as needed (e.g., place more strict limiters on write endpoints).
+app.use("/api/", generalLimiter);
 
 // Request logging middleware with improved formatting
 app.use((req, res, next) => {
@@ -181,18 +202,16 @@ app.use((req, res, next) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id, "- IP:", socket.handshake.address);
 
-  // Error handling for socket
   socket.on("error", (error) => {
     console.error("Socket error:", error);
     socket.emit("error", { message: "An error occurred" });
   });
 
-  // Authentication for socket events
+  // Example token auth handler — keep token verification secure in production
   socket.on("authenticate", (token) => {
     try {
-      // Verify token and store user info in socket
-      // This is a simplified example - implement proper JWT verification
-      socket.userId = token; // In real implementation, verify JWT and extract user ID
+      // Replace this with proper JWT verification (this is a placeholder)
+      socket.userId = token;
       console.log(`User authenticated for socket: ${socket.id}`);
     } catch (error) {
       socket.emit("error", { message: "Authentication failed" });
@@ -216,7 +235,6 @@ io.on("connection", (socket) => {
       socket.join(`course-${courseId}`);
       console.log(`User ${socket.id} joined course ${courseId}`);
 
-      // Notify others in the course
       socket.to(`course-${courseId}`).emit("user-joined", {
         userId: socket.userId,
         socketId: socket.id,
@@ -258,9 +276,7 @@ io.on("connection", (socket) => {
 
   socket.on("typing-start", (data) => {
     try {
-      if (!data.courseId) {
-        throw new Error("Course ID required");
-      }
+      if (!data.courseId) throw new Error("Course ID required");
       socket.to(`course-${data.courseId}`).emit("user-typing", {
         userId: socket.userId,
         isTyping: true,
@@ -272,9 +288,7 @@ io.on("connection", (socket) => {
 
   socket.on("typing-stop", (data) => {
     try {
-      if (!data.courseId) {
-        throw new Error("Course ID required");
-      }
+      if (!data.courseId) throw new Error("Course ID required");
       socket.to(`course-${data.courseId}`).emit("user-typing", {
         userId: socket.userId,
         isTyping: false,
@@ -308,26 +322,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes with error handling wrapper
-const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
-
-// Apply routes with async handler and specific rate limiting
-app.use("/api/auth", asyncHandler(authRoutes));
-app.use("/api/users", asyncHandler(userRoutes));
-app.use("/api/courses", asyncHandler(courseRoutes));
-app.use("/api/payments", asyncHandler(paymentRoutes));
-app.use("/api/exams", asyncHandler(examRoutes));
-app.use("/api/discussions", asyncHandler(discussionRoutes));
-app.use("/api/admin", asyncHandler(adminRoutes));
-app.use("/api/feedback", asyncHandler(feedbackRoutes));
-app.use("/api/activities", asyncHandler(activityRoutes));
+// IMPORTANT: Do NOT wrap routers with asyncHandler — routers are Express routers, not route handlers.
+// Apply async wrappers at the controller level or use a helper inside each route file if needed.
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/exams", examRoutes);
+app.use("/api/discussions", discussionRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/activities", activityRoutes);
 
 // Enhanced health check with more metrics
 app.get("/api/health", async (req, res) => {
   try {
-    // Check database connection
     const dbState = mongoose.connection.readyState;
     const dbStatus =
       dbState === 1
@@ -355,7 +364,6 @@ app.get("/api/health", async (req, res) => {
       connectedClients: io.engine.clientsCount,
     };
 
-    // If database is not connected, return service unavailable
     if (dbState !== 1) {
       return res.status(503).json({
         ...healthCheck,
@@ -426,8 +434,9 @@ app.use(errorHandler);
 const connectDB = async (retries = 5, delay = 5000) => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      // Increased timeouts for reliability under load and index builds
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 90000,
       maxPoolSize: 10,
       minPoolSize: 2,
       retryWrites: true,

@@ -217,6 +217,11 @@ courseSchema.index({ "price.monthly": 1 });
 courseSchema.index({ tags: 1 });
 courseSchema.index({ averageRating: -1 });
 courseSchema.index({ createdAt: -1 });
+courseSchema.index({ status: 1 });
+courseSchema.index({ isPublic: 1 });
+
+// VERY IMPORTANT FOR SEARCH
+courseSchema.index({ title: "text", description: "text" });
 
 // Pre-save middleware to calculate totals
 courseSchema.pre("save", function (next) {

@@ -28,21 +28,23 @@ const CourseContentManager = () => {
   const [courseDetails, setCourseDetails] = useState(null);
 
   // Fetch course data with units
-  const {
-    data: courseData,
-    isLoading: courseLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["course-with-content", courseId],
-    queryFn: () => coursesAPI.getCourse(courseId),
-    enabled: !!courseId,
-    retry: 1,
-  });
+const {
+  data: courseData,
+  isLoading: courseLoading,
+  isError,
+  error,
+} = useQuery({
+  queryKey: ["course-with-content", courseId],
+  queryFn: () => coursesAPI.getCourse(courseId),
+  enabled: !!courseId, // only fetch when courseId exists
+  retry: 1,
+});
+
 
   // Mutation for updating course content only
   const updateContentMutation = useMutation({
-    mutationFn: (contentData) => coursesAPI.updateCourse(courseId, contentData),
+    mutationFn: (contentData) =>
+      coursesAPI.updateCourse(courseId, contentData || {}),
     onSuccess: () => {
       toast.success("Course content updated successfully!");
       queryClient.invalidateQueries(["course-with-content", courseId]);

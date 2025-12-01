@@ -35,8 +35,6 @@ const AdminCourses = () => {
     queryFn: () => adminAPI.getCourses(filters),
   });
 
-    console.log(courses);
-
   const updateCourseStatusMutation = useMutation({
     mutationFn: ({ courseId, status }) =>
       adminAPI.updateCourseStatus(courseId, { isActive: status }),

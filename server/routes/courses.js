@@ -14,6 +14,7 @@ import {
   requireAdmin,
   authenticateWithImage,
   optionalAuth,
+  uploadCourseImage,
 } from "../middleware/auth.js";
 import { validateCourse } from "../middleware/validation.js";
 

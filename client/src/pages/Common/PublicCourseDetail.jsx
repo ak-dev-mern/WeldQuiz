@@ -33,6 +33,8 @@ const PublicCourseDetail = () => {
         setLoading(true);
         setError(null);
         const response = await coursesAPI.getCourse(id);
+        console.log(response?.data?.course);
+
         setCourse(response?.data?.course || response?.data);
       } catch (err) {
         console.error("Error fetching course:", err);
@@ -343,17 +345,9 @@ const PublicCourseDetail = () => {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-dark-800 rounded-xl shadow-lg overflow-hidden">
               <img
-                src={
-                  course.image ||
-                  course.thumbnail ||
-                  "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=400&fit=crop"
-                }
+                src={course.image || course.thumbnail}
                 alt={course.title}
                 className="w-full h-64 object-cover"
-                onError={(e) => {
-                  e.target.src =
-                    "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=400&fit=crop";
-                }}
               />
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-4">
@@ -555,10 +549,6 @@ const PublicCourseDetail = () => {
                     src={getAvatarUrl(course.instructor?.profile?.avatar)}
                     alt={course.instructor.username}
                     className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face";
-                    }}
                   />
                   <div>
                     <div className="font-semibold text-gray-900 dark:text-white">
